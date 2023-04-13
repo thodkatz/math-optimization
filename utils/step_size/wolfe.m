@@ -1,4 +1,4 @@
-function a = wolfe(f, f_grad, x, pk, a, rho, c1, c2=0.2, iter_count=10)
+function a = wolfe(f, f_grad, x, pk, a, rho, c1, c2=0.2, iter_count=20)
     % Backtracking line search using the sufficient decrease condition and the curvature condition.
 
     iter = 0;

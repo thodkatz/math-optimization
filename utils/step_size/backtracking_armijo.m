@@ -1,4 +1,4 @@
-function a = backtracking_armijo(f, f_grad, x, pk, a, rho, c, iter_count=10)
+function a = backtracking_armijo(f, f_grad, x, pk, a, rho, c, iter_count=20)
     % Backtracking line search using the sufficient decrease condition (armijo).
 
     iter = 0;

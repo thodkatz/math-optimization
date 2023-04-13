@@ -1,4 +1,4 @@
-function [xmin, ymin] = steepest_descent(f, f_grad, x, line_search_method, a=1, rho=0.5, c=0.1, eps=1e-6, max_iters=10)
+function [xmin, ymin] = steepest_descent(f, f_grad, x, line_search_method, a=1, rho=0.5, c=0.1, eps=1e-6, max_iters=100)
     # Line search using the steepest descent method
 
     fprintf("STARTED Line search using steepest descent\n")
