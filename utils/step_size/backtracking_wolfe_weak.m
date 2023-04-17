@@ -7,14 +7,14 @@ function a = backtracking_wolfe_weak(f, f_grad, x, pk, a, rho, c=[1e-4, 0.9], it
     fprintf("\nSTARTED WOLFE Step size config...\n")
     while armijo_condition(f, f_grad, x, pk, a, rho, c1) || curvature_condition(f_grad, x, pk, a, rho, c2)
         a *= rho;
-        fprintf("Iter %d, step size: %d\n", iter, a)
+        % fprintf("Iter %d, step size: %d\n", iter, a)
         iter += 1;
         if iter == iter_count
             fprintf("Maximum number of iterations\n")
             break
         end
     end
-    fprintf("ENDED WOLFE Step size config...\n\n")
+    fprintf("ENDED WOLFE Step size a=%f \n\n", a)
 end
 
 function b = curvature_condition(f_grad, x, pk, a, rho, c)
