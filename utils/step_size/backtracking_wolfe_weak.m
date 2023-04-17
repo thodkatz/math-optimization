@@ -1,4 +1,6 @@
-function a = backtracking_wolfe_weak(f, f_grad, x, pk, a, rho, c1=1e-4, c2=0.9, iter_count=10)
+function a = backtracking_wolfe_weak(f, f_grad, x, pk, a, rho, c=[1e-4, 0.9], iter_count=10)
+    c1 = c(1);
+    c2 = c(2);
     % Backtracking line search using the sufficient decrease condition and the curvature condition.
 
     iter = 0;
