@@ -5,9 +5,8 @@ function [xmin, ymin] = newton(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1
     f_hessian = @(v) multidim_hessian(f_sym, v);
 
     fprintf("STARTED Line search using newton\n")
-    xall = [x]
-    yall = [f(x)]
-    steps_all = []
+    xall = {x};
+    steps_all = [a];
     for iter = 1:max_iters
         if any(isinf(x))
             error("Failed to converge. Inf value reached")
@@ -23,14 +22,14 @@ function [xmin, ymin] = newton(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1
         end
 
         step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c);
-        steps_all(end+1) = step
         x += step*pk;
-        xall(end+1) = x
-        yall(end+1) = f(x)
-        fprintf("Iter %d, x=[%f,%f], a=%f\n", iter, x(1), x(2), step)
+        steps_all(end+1) = step;
+        xall{end+1} = x;
+        % fprintf("Iter %d, x=[%f,%f], a=%f\n", iter, x(1), x(2), step)
     end
     xmin = x;
     ymin = f(xmin);
-
     fprintf("ENDED Line search using newton\n")
+
+    plot_line_search(f, xall, steps_all)
 end

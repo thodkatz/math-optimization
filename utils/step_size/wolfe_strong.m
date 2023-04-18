@@ -11,7 +11,7 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
     phi_prev = phi0;
 
     iter = 0;
-    fprintf("\nSTARTED Wolfe strong line search...\n")
+    % fprintf("\nSTARTED Wolfe strong line search...\n")
     while iter < max_iters
         phi = f(x + a*pk);
         if phi > phi0 + c1*a*phi_derivative0 || (iter > 0 && phi > phi_prev)
@@ -39,10 +39,10 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
     end
 
     if iter == max_iters
-        fprintf("Maximum number of iterations\n")
+        % fprintf("Maximum number of iterations\n")
     end
 
-    fprintf("ENDED Wolfe strong line search a=%f \n\n", a)
+    % fprintf("ENDED Wolfe strong line search a=%f \n\n", a)
 end
 
 function a_star = zoom(a_low, a_hi, phi_low, phi_high, phi0, derivative_phi0, x, f, f_grad, pk, c1=1e-4, c2=0.9, max_iters=10)
@@ -52,7 +52,7 @@ function a_star = zoom(a_low, a_hi, phi_low, phi_high, phi0, derivative_phi0, x,
     iter = 0;
     delta1 = 0.2;
     delta2 = 0.1;
-    fprintf("STARTED Zoom search\n")
+    % fprintf("STARTED Zoom search\n")
     derivative_phi_low = f_grad(x+a_low*pk);
     while iter < max_iters
         dalpha = a_hi - a_low;
@@ -82,8 +82,8 @@ function a_star = zoom(a_low, a_hi, phi_low, phi_high, phi0, derivative_phi0, x,
     end
 
     if iter == max_iters
-        fprintf("Maximum number of iterations\n")
+        % fprintf("Maximum number of iterations\n")
         a_star = a_j; % not sure what to do here?
     end
-    fprintf("ENDED Zoom search a_star = %f \n", a_star)
+    % fprintf("ENDED Zoom search a_star = %f \n", a_star)
 end
