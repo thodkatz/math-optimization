@@ -1,5 +1,39 @@
 function [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100)
-    # Line search using the steepest descent method
+    % STEEPEST DESCENT Find the minimum of a function using the Newton method
+    %
+    % USAGE:
+    %       [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c, rho, a, eps, max_iters)
+    %       finds a local minimum of the symbolic function f_sym, starting at point x,
+    %       using the steepest descent method with the specified line search method.
+    %
+    % INPUTS:
+    %       - f_sym: symbolic function of n variables, where n is the number of
+    %         elements in x
+    %       - x: initial point of the search (1-by-n row vector)
+    %       - line_search_method: integer indicating the line search method to use.
+    %         Possible values are 1: 'wolfe weak', 2: 'wolfe strong', 3: 'armijo', and 4: 'none'
+    %       - c: parameter for the Armijo and Wolfe search methods
+    %       - rho: parameter for the Armijo and Wolfe line search methods
+    %       - a: initial step size for the line search methods
+    %       - eps: tolerance for the stopping criterion
+    %       - max_iters: maximum number of iterations
+    %
+    % OUTPUTS:
+    %       - xmin: 1-by-n row vector representing the point where the minimum is found
+    %       - ymin: scalar value representing the minimum value found
+    %
+    % EXAMPLES:
+    %       is_backtracking_wolfe_weak = 1;
+    %       is_wolfe_strong = 2;
+    %       is_backtracking_armijo = 3;
+    %       is_none = 4;
+    %
+    %       syms x y
+    %       f_sym = x^2 + y^2 + x*y + x + y + 1;
+    %       [xmin, ymin] = steepest_descent(f_sym, [-1, -1], is_backtracking_armijo, 'rho', 0.8, 'c', 0.2)
+    %       % Output: xmin = [-0.4992, -0.4992], ymin = 0.7508
+    %
+
     f = @(v) sym2fun(f_sym, v);
     f_grad = @(v) multidim_grad(f_sym, v);
 
