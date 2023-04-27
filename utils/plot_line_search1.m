@@ -1,4 +1,4 @@
-function plot_line_search1(f, xall, steps_all)
+function plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
     yall = [];
     iterations = 1:numel(xall);
     for i = iterations
@@ -6,7 +6,7 @@ function plot_line_search1(f, xall, steps_all)
     end
 
     # we can't plot more than 2 dimensions
-    more_2_dims = !is_vector(xall{1});
+    more_2_dims = numel(xall{1}) > 2;
     if more_2_dims
         rows = 1;
     else
@@ -16,11 +16,8 @@ function plot_line_search1(f, xall, steps_all)
     if not(more_2_dims)
         subplot(rows, 1, plot_num)
         plot_num += 1;
-        # search domain ??
-        x = -2:0.5:2;
-        y = -2:0.5:2;
-        % x = linspace(-2,2);
-        % y = linspace(-2,2);
+        x = search_domain_x;
+        y = search_domain_y;
         z = zeros(numel(x),numel(y));
         for row=1:numel(x)
             for col=1:numel(y)
@@ -35,7 +32,7 @@ function plot_line_search1(f, xall, steps_all)
         for i=iterations
             x1 = xall{i}(1);
             x2 = xall{i}(2);
-            plot(x1,x2,'h','color','red','MarkerSize',8)
+            plot(x1,x2,'o','color','red','MarkerSize',8)
             x1all = [x1all x1];
             x2all = [x2all x2];
         end

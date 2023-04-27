@@ -1,4 +1,4 @@
-function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100)
+function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100)
     % STEEPEST DESCENT Find the minimum of a function using the Newton method
     %
     % USAGE:
@@ -58,10 +58,10 @@ function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rh
         xall{end+1} = x;
         % fprintf("Iter %d, x=[%f,%f], a=%f\n", iter, x(1), x(2), step)
     end
-    xmin = x;
-    fmin = f(xmin);
     fprintf("ENDED Line search using steepest descent\n")
+    xmin = x
+    fmin = f(xmin)
 
-    plot_line_search1(f, xall, steps_all)
+    plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
 end
 
