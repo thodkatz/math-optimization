@@ -1,8 +1,8 @@
-function [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100)
+function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100)
     % STEEPEST DESCENT Find the minimum of a function using the Newton method
     %
     % USAGE:
-    %       [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c, rho, a, eps, max_iters)
+    %       [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, c, rho, a, eps, max_iters)
     %       finds a local minimum of the symbolic function f_sym, starting at point x,
     %       using the steepest descent method with the specified line search method.
     %
@@ -20,7 +20,7 @@ function [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rh
     %
     % OUTPUTS:
     %       - xmin: 1-by-n row vector representing the point where the minimum is found
-    %       - ymin: scalar value representing the minimum value found
+    %       - fmin: scalar value representing the minimum value found
     %
     % EXAMPLES:
     %       is_backtracking_wolfe_weak = 1;
@@ -30,8 +30,8 @@ function [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rh
     %
     %       syms x y
     %       f_sym = x^2 + y^2 + x*y + x + y + 1;
-    %       [xmin, ymin] = steepest_descent(f_sym, [-1, -1], is_backtracking_armijo, 'rho', 0.8, 'c', 0.2)
-    %       % Output: xmin = [-0.4992, -0.4992], ymin = 0.7508
+    %       [xmin, fmin] = steepest_descent(f_sym, [-1, -1], is_backtracking_armijo, 'rho', 0.8, 'c', 0.2)
+    %       % Output: xmin = [-0.4992, -0.4992], fmin = 0.7508
     %
 
     f = @(v) sym2fun(f_sym, v);
@@ -59,9 +59,9 @@ function [xmin, ymin] = steepest_descent(f_sym, x, line_search_method, c=0.1, rh
         % fprintf("Iter %d, x=[%f,%f], a=%f\n", iter, x(1), x(2), step)
     end
     xmin = x;
-    ymin = f(xmin);
+    fmin = f(xmin);
     fprintf("ENDED Line search using steepest descent\n")
 
-    plot_line_search(f, xall, steps_all)
+    plot_line_search1(f, xall, steps_all)
 end
 
