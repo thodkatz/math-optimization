@@ -7,7 +7,7 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
     a_prev = a0;
 
     phi0 = f(x);
-    phi_derivative0 = f_grad(x);
+    phi_derivative0 = dot(f_grad(x),pk);
     phi_prev = phi0;
 
     iter = 0;
@@ -18,7 +18,7 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
             a = zoom(a_prev, a, phi_prev, phi, phi0, phi_derivative0, x, f, f_grad, pk, c1, c2);
             break
         end
-        phi_derivative = f_grad(x+a*pk);
+        phi_derivative = dot(f_grad(x+a*pk),pk);
         if norm(phi_derivative) <= -c2*phi_derivative0
             break
         elseif phi_derivative >= 0
