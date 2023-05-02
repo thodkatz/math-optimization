@@ -3,7 +3,9 @@ function a = backtracking_armijo(f, f_grad, x, pk, a, rho, c, iter_count=10)
 
     iter = 0;
     % fprintf("\nSTARTED ARMIJO Step size config...\n")
-    while armijo_condition(f, f_grad, x, pk, a, rho, c)
+    ck = f(x);
+    phi0 = dot(f_grad(x), pk);
+    while armijo_condition(f, phi0, x, pk, a, rho, c, ck)
         a *= rho;
         % fprintf("Iter %d, step size: %d\n", iter, a)
         iter += 1;
@@ -15,6 +17,6 @@ function a = backtracking_armijo(f, f_grad, x, pk, a, rho, c, iter_count=10)
     % fprintf("ENDED ARMIJO Step size a=%f \n\n", a)
 end
 
-function b = armijo_condition(f, f_grad, x, pk, a, rho, c)
-    b = f(x + a*pk) > f(x) + c*a*dot(f_grad(x), pk);
+function b = armijo_condition(f, phi0, x, pk, a, rho, c, ck)
+    b = f(x + a*pk) > ck + c*a*phi0;
 end
