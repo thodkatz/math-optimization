@@ -11,7 +11,7 @@ function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, search_do
     %         elements in x
     %       - x: initial point of the search (1-by-n row vector)
     %       - line_search_method: integer indicating the line search method to use.
-    %         Possible values are 1: 'wolfe weak', 2: 'wolfe strong', 3: 'armijo', and 4: 'none'
+    %         Possible values are: 'backtracking_wolfe_weak', 2: 'wolfe_strong', 3: 'backtracking_armijo', and 4: 'none'
     %       - c: parameter for the Armijo and Wolfe search methods
     %       - rho: parameter for the Armijo and Wolfe line search methods
     %       - a: initial step size for the line search methods
@@ -23,14 +23,10 @@ function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, search_do
     %       - fmin: scalar value representing the minimum value found
     %
     % EXAMPLES:
-    %       is_backtracking_wolfe_weak = 1;
-    %       is_wolfe_strong = 2;
-    %       is_backtracking_armijo = 3;
-    %       is_none = 4;
     %
     %       syms x y
     %       f_sym = x^2 + y^2 + x*y + x + y + 1;
-    %       [xmin, fmin] = steepest_descent(f_sym, [-1, -1], is_backtracking_armijo, 'rho', 0.8, 'c', 0.2)
+    %       [xmin, fmin] = steepest_descent(f_sym, [-1, -1], "backtracking_armijo", 'rho', 0.8, 'c', 0.2)
     %       % Output: xmin = [-0.4992, -0.4992], fmin = 0.7508
     %
 
@@ -52,7 +48,17 @@ function [xmin, fmin] = steepest_descent(f_sym, x, line_search_method, search_do
             break
         end
 
-        step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c);
+        if startsWith(line_search_method, "nonmonotone")
+            if iter == 1
+                ck = f(x);
+                qk = 1;
+            else
+                [ck, qk] = nonmonotone_attrs(f(x), ck, qk);
+            end
+        else
+            ck = f(x);
+        end
+        step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck);
         x += step*pk;
         steps_all(end+1) = step;
         xall{end+1} = x;

@@ -11,14 +11,9 @@ function f = rosen_sym()
 end
 
 
-is_backtracking_wolfe_weak = 1;
-is_wolfe_strong = 2;
-is_backtracking_armijo = 3;
-is_none = 4;
-
-% search_x = -1.2:0.1:1.2;
-% search_y = -1.2:0.1:1.2;
-% [xmin, fmin] = newton(rosen_sym, [1.2,1.2]', is_backtracking_wolfe_weak, search_domain_x, search_domain_y);
+search_x = -1.2:0.1:1.2;
+search_y = -1.2:0.1:1.2;
+[xmin, fmin] = newton(rosen_sym, [-1.8,-1.8]', "nonmonotone_armijo", search_domain_x, search_domain_y);
 
 function f = f2_sym()
     syms x y
@@ -27,13 +22,13 @@ end
 
 % search_x = 0:0.2:3;
 % search_y = 0:0.2:3;
-% [xmin, fmin] = steepest_descent(f2_sym, [3,3]', is_none, search_x, search_y);
+% [xmin, fmin] = steepest_descent(f2_sym, [3,3]', "none", search_x, search_y);
 
 % search_x = -1.2:0.1:1.2;
 % search_y = -1.2:0.1:1.2;
 % c = [1e-4 0.9];
 % rho = 2;
-% [xmin, fmin] = steepest_descent(rosen_sym, [1.2,1.2]', is_wolfe_strong, search_x, search_y, c, rho);
+% [xmin, fmin] = steepest_descent(rosen_sym, [1.2,1.2]', "wolfe_strong", search_x, search_y, c, rho);
 
 function f = f4_sym()
     syms x y
@@ -42,11 +37,11 @@ end
 
 % search_x = -1.5:0.5:1.5;
 % search_y = -1.5:0.5:1.5;
-% [xmin, fmin] = newton(f4_sym, [-1.5,1.25]', is_backtracking_wolfe_weak, search_x, search_y);
+% [xmin, fmin] = newton(f4_sym, [-1.5,1.25]', "backtracking_wolfe_weak", search_x, search_y);
 
 % search_x = -1.5:0.5:1.5;
 % search_y = -1.5:0.5:1.5;
-% [xmin, fmin] = steepest_descent(f4_sym, [-1.5,1.25]', is_backtracking_wolfe_weak, search_x, search_y);
+% [xmin, fmin] = steepest_descent(f4_sym, [-1.5,1.25]', "backtracking_wolfe_weak", search_x, search_y);
 
 
 function f = f5_sym()
@@ -56,4 +51,4 @@ end
 
 search_x = -1:1:1;
 search_y = -1:1:1;
-[xmin, fmin] = newton(f5_sym, [10,10,10]', is_backtracking_wolfe_weak, search_x, search_y);
+[xmin, fmin] = newton(f5_sym, [10,10,10]', "nonmonotone_backtracking_wolfe_weak", search_x, search_y);

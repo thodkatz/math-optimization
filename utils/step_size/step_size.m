@@ -1,16 +1,17 @@
-function step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c)
-    is_backtracking_wolfe_weak = 1;
-    is_wolfe_strong = 2;
-    is_backtracking_armijo = 3;
-    is_none = 4;
-    if line_search_method == is_backtracking_armijo
-        step = backtracking_armijo(f, f_grad, x, pk, a, rho, c);
-    elseif line_search_method == is_backtracking_wolfe_weak
+function step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck)
+    split_method = strsplit(line_search_method, "_");
+    if strcmp(split_method(1,1), "nonmonotone")
+        line_search_method = strjoin(split_method(1,2:end), "_");
+    end
+
+    if strcmp(line_search_method, "backtracking_armijo") == 1
+        step = backtracking_armijo(f, f_grad, x, pk, a, rho, c, ck);
+    elseif strcmp(line_search_method, "backtracking_wolfe_weak") == 1
         if !is_vector(c)
             c = [1e-4, 0.9];
         end
-        step = backtracking_wolfe_weak(f, f_grad, x, pk, a, rho, c);
-    elseif line_search_method == is_wolfe_strong
+        step = backtracking_wolfe_weak(f, f_grad, x, pk, a, rho, c, ck);
+    elseif strcmp(line_search_method, "wolfe_strong") == 1
         if !is_vector(c)
             c = [1e-4, 0.9];
         end
@@ -18,8 +19,10 @@ function step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c)
             fprintf("WARNING: rho < 1, should be greater for a to reach the amax\n")
             rho = 2;
         end
-        step = wolfe_strong(f, f_grad, x, pk, a, rho, c);
-    else
+        step = wolfe_strong(f, f_grad, x, pk, a, rho, c, ck);
+    elseif strcmp(line_search_method, "none") == 1
         step = a;
+    else
+        error(-1)
     end
 end

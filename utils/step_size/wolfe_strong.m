@@ -1,4 +1,4 @@
-function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_iters=20)
+function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, max_iters=20)
     c1 = c(1);
     c2 = c(2);
 
@@ -6,23 +6,22 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
     a = a_max/2;
     a_prev = a0;
 
-    phi0 = f(x);
     phi_derivative0 = dot(f_grad(x),pk);
-    phi_prev = phi0;
+    phi_prev = ck;
 
     iter = 0;
     % fprintf("\nSTARTED Wolfe strong line search...\n")
     while iter < max_iters
         phi = f(x + a*pk);
-        if phi > phi0 + c1*a*phi_derivative0 || (iter > 0 && phi > phi_prev)
-            a = zoom(a_prev, a, phi_prev, phi, phi0, phi_derivative0, x, f, f_grad, pk, c1, c2);
+        if phi > ck + c1*a*phi_derivative0 || (iter > 0 && phi > phi_prev)
+            a = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2);
             break
         end
         phi_derivative = dot(f_grad(x+a*pk),pk);
         if norm(phi_derivative) <= -c2*phi_derivative0
             break
         elseif phi_derivative >= 0
-            a = zoom(a_prev, a, phi_prev, phi, phi0, phi_derivative0, x, f, f_grad, pk, c1, c2);
+            a = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2);
             break
         end
 
@@ -45,7 +44,7 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], max_i
     % fprintf("ENDED Wolfe strong line search a=%f \n\n", a)
 end
 
-function a_star = zoom(a_low, a_hi, phi_low, phi_high, phi0, derivative_phi0, x, f, f_grad, pk, c1=1e-4, c2=0.9, max_iters=10)
+function a_star = zoom(a_low, a_hi, phi_low, phi_high, ck, derivative_phi0, x, f, f_grad, pk, c1=1e-4, c2=0.9, max_iters=10)
     % implementation: https://github.com/scipy/scipy/blob/v1.6.3/scipy/optimize/linesearch.py#L193-L335
     assert(a_low < a_hi)
 
@@ -61,7 +60,7 @@ function a_star = zoom(a_low, a_hi, phi_low, phi_high, phi0, derivative_phi0, x,
         a_j = a_low + 0.5*dalpha;
 
         phi_j = f(x+a_j*pk);
-        if phi_j > phi0 + c1*a_j*derivative_phi0 || phi_j >= phi_low
+        if phi_j > ck + c1*a_j*derivative_phi0 || phi_j >= phi_low
             a_hi = a_j;
             phi_high = phi_j;
         else
