@@ -176,7 +176,7 @@ Knowledge consolidation of math optimization around Quasi-Newton methods via con
 
 \section{}
 
-Problems listed on Chapter 2 of \cite{nocedal1999numerical}:
+Problems listed on Chapter 2 of ref \cite{nocedal1999numerical}:
 
 \label{rosenbrock}
 \subsection{}
@@ -370,7 +370,7 @@ Program the steepest descent and Newton algorithms using the a) backtracking lin
 
 For the analysis we have created the following table. For the plots you can check \ref{appendix}.
 
-The code can be found \href{https://github.com/thodkatz/math-optimization}{here}.
+The code can be found \ref{code}.
 The main two functions of the implementation are the \verb|newton| and \verb|steepest_descent|. For an example on how to use the functions you can check the \verb|demo.m| and the jupyter notebook.
 
 The steps are:
@@ -463,6 +463,19 @@ The steps are:
 
 \end{itemize}
 
+\section{}
+
+Test on problem functions 1: Ext; Rosenbrock, 2: Wood, 3: Powell singular, 4: Cube, 5:Trigonometric, 6: Helical valley (ref. page 713 Grippo), the following line search techniques:
+
+\begin{itemize}
+    \item Grippo/max with Armijo
+    \item Grippo/max with Armijo + Goldstein (lower bound)
+    \item Grippo/max with Wolfe condition (open)
+    \item Comparison with Hagher \& Zhang with Steepest descent \& Newton: a) Armijo, b) Wolfe
+    \item Comparison with monotone Armijo + Goldstein
+\end{itemize}
+
+
 
 \section{Wrap up}
 
@@ -521,6 +534,48 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 \end{itemize}
 
+\label{code}
+\section{Code}
+
+\textbf{demo.m}
+\lstinputlisting{code/demo.m}
+% \lstinputlisting{code/simulation.ipynb}
+
+\textbf{tests.m}
+\lstinputlisting{code/tests.m}
+
+
+\subsection{utils}
+\textbf{is\_vector.m}
+\lstinputlisting{code/utils/is_vector.m}
+\textbf{plot\_line\_search1.m}
+\lstinputlisting{code/utils/plot_line_search1.m}
+\textbf{vector\_function.m}
+\lstinputlisting{code/utils/vector_function.m}
+
+\subsubsection{line\_search\_methods}
+\textbf{newton.m}
+\lstinputlisting{code/utils/line_search_methods/newton.m}
+\textbf{steepest\_descent.m}
+\lstinputlisting{code/utils/line_search_methods/steepest_descent.m}
+
+\subsubsection{step\_size}
+\textbf{backtracking\_armijo.m}
+\lstinputlisting{code/utils/step_size/backtracking_armijo.m}
+\textbf{backtracking\_wolfe\_weak.m}
+\lstinputlisting{code/utils/step_size/backtracking_wolfe_weak.m}
+\textbf{wolfe\_strong.m}
+\lstinputlisting{code/utils/step_size/wolfe_strong.m}
+\textbf{armijo\_condition.m}
+\lstinputlisting{code/utils/step_size/armijo_condition.m}
+\textbf{nonmonotone\_attrs.m}
+\lstinputlisting{code/utils/step_size/nonmonotone_attrs.m}
+\textbf{step\_size.m}
+\lstinputlisting{code/utils/step_size/step_size.m}
+
+
+
+
 \label{appendix}
 \section{Appendix}
 
@@ -532,6 +587,4 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 
 \end{document}
-
-
 
