@@ -174,7 +174,7 @@ Knowledge consolidation of math optimization around Quasi-Newton methods via con
 
 \pagebreak
 
-\section{Chapter 2}
+\section{}
 
 Problems listed on Chapter 2 of \cite{nocedal1999numerical}:
 
@@ -354,7 +354,7 @@ Let's suppose that given an isolated local minimer $x^{*}$ for a neighbor N, the
 \pagebreak
 
 
-\section{Chapter 3}
+\section{}
 
 Program the steepest descent and Newton algorithms using the a) backtracking line search with armijo or b) wolfe weak condition. c) the wolfe strong condition and d) without any condition. Use them to minimize the following functions:
 
@@ -370,14 +370,16 @@ Program the steepest descent and Newton algorithms using the a) backtracking lin
 
 For the analysis we have created the following table. For the plots you can check \ref{appendix}.
 
-The main two functions of the implementation are the \verb|newton| and \verb|steepest_descent|. For an example on how to use the functions you can check the \verb|demo.m| and the jupyter notebook. The steps are:
+The code can be found \href{https://github.com/thodkatz/math-optimization}{here}.
+The main two functions of the implementation are the \verb|newton| and \verb|steepest_descent|. For an example on how to use the functions you can check the \verb|demo.m| and the jupyter notebook.
 
+The steps are:
 \begin{itemize}
-    \item Include all the ".m" files in the path
+    \item Include all the ".m" files in the path (\verb|addpath()|)
     \item Define a symbolic function
     \item Pick a number from 1-4 to choose your step size configuration (1: Backtracking wolfe weak, 2: Wolfe stong, 3: Backtracking armijo, 4: None)
-    \item Pick a starting point e.g. [1,1]'
-    \item Pick a search domain for the plots e.g. search\_x = -1:-0.1:1, search\_y = -1:0.1:1
+    \item Pick a starting point e.g. \verb|[1,1]'|
+    \item Pick a search domain for the plots e.g. \verb|search_x = -1:-0.1:1|, \verb|search_y = -1:0.1:1|
 \end{itemize}
 
 % Please add the following required packages to your document preamble:
@@ -439,91 +441,6 @@ The main two functions of the implementation are the \verb|newton| and \verb|ste
 
 % Problems listed on Chapter 3 of \cite{nocedal1999numerical}.
 
-\subsection{}
-
-% \textbf{Problem}
-
-% Program the steepest descent and Newton algorithms using the backtracking line
-% search, Algorithm 3.1. Use them to minimize the Rosenbrock function (2.22). Set the initial
-% step length $a_0 = 1$ and print
-% the step length used by each method at each iteration.
-
-% First try the initial point $x_0 = (1.2, 1.2)^{T}$
-% and then the more difficult starting point
-% $x_0 = (-1.2, 1)^{T}$ .
-
-% Follow ups:
-% \begin{itemize}
-%     \item Try it without the Armijo condition.
-%     \item For the line search of the step size, instead of the Armijo condition, use a weak Wolfe line search.
-%     \item Use wolfe strong line search.
-%     \item Test it for different functions with more than 2 dimensions.
-% \end{itemize}
-
-% \textbf{Solution}
-
-% Using a jupyter notebook with Octave as kernel, we can have the following implementation.
-% For the actual code, we should have a link to a repo, instead of referencing it here.
-
-
-
-\subsubsection{newton.m}
-
-\lstinputlisting{code/utils/line_search_methods/newton.m}
-
-\subsubsection{steepest\_descent.m}
-
-\lstinputlisting{code/utils/line_search_methods/steepest_descent.m}
-
-\subsubsection{multidim\_grad.m}
-
-\lstinputlisting{code/utils/gradients/multidim_grad.m}
-
-\subsubsection{multidim\_hessian.m}
-
-\lstinputlisting{code/utils/gradients/multidim_hessian.m}
-
-\subsubsection{backtracking\_armijo.m}
-
-\lstinputlisting{code/utils/step_size/backtracking_armijo.m}
-
-\subsubsection{backtracking\_wolfle\_weak.m}
-
-\lstinputlisting{code/utils/step_size/backtracking_wolfe_weak.m}
-
-\subsubsection{wolfe\_strong.m}
-
-\lstinputlisting{code/utils/step_size/wolfe_strong.m}
-
-\subsubsection{armijo\_condition.m}
-
-\lstinputlisting{code/utils/step_size/armijo_condition.m}
-
-\subsubsection{nonmonotone\_attrs.m}
-
-\lstinputlisting{code/utils/step_size/nonmonotone_attrs.m}
-
-\subsubsection{step\_size.m}
-
-\lstinputlisting{code/utils/step_size/step_size.m}
-
-\subsubsection{is\_vector.m}
-
-\lstinputlisting{code/utils/is_vector.m}
-
-\subsubsection{point2sym.m}
-
-\lstinputlisting{code/utils/point2sym.m}
-
-\subsubsection{sym2fun.m}
-
-\lstinputlisting{code/utils/sym2fun.m}
-
-\subsubsection{demo.m}
-
-\lstinputlisting{code/demo.m}
-
-% \lstinputlisting{code/utils/gradients/mutlidim_grad.m}
 
 \subsection{Conclusions}
 
@@ -615,3 +532,6 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 
 \end{document}
+
+
+

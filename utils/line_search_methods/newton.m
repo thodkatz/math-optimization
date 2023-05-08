@@ -38,9 +38,19 @@ function [xmin, fmin, iter] = newton(f_sym, x, line_search_method, search_domain
     %       % Output: xmin = [-0.4992, -0.4992], fmin = 0.7508
     %
 
-    f = @(v) sym2fun(f_sym, v);
-    f_grad = @(v) multidim_grad(f_sym, v);
-    f_hessian = @(v) multidim_hessian(f_sym, v);
+    f = function_handle(f_sym);
+    f = @(v) f(num2cell(v){:});
+
+    sym_vars = symvar(f_sym);
+
+    f_grad = gradient(f_sym, sym_vars);
+    f_grad = function_handle(f_grad);
+    f_grad = @(v) f_grad(num2cell(v){:});
+
+    f_hessian = hessian(f_sym, sym_vars);
+    f_hessian = function_handle(f_hessian);
+    f_hessian = @(v) f_hessian(num2cell(v){:});
+
 
     fprintf("STARTED Line search using newton\n")
     xall = {x};

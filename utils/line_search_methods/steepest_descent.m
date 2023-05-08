@@ -30,8 +30,14 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
     %       % Output: xmin = [-0.4992, -0.4992], fmin = 0.7508
     %
 
-    f = @(v) sym2fun(f_sym, v);
-    f_grad = @(v) multidim_grad(f_sym, v);
+    f = function_handle(f_sym);
+    f = @(v) f(num2cell(v){:});
+
+    sym_vars = symvar(f_sym);
+
+    f_grad = gradient(f_sym, sym_vars);
+    f_grad = function_handle(f_grad);
+    f_grad = @(v) f_grad(num2cell(v){:});
 
     fprintf("STARTED Line search using steepest descent\n")
     xall = {x};
