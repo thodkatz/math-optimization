@@ -28,6 +28,11 @@ function a = bisection_wolfe_weak(f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_c
         else
             break
         end
+        iter += 1;
+        if iter == iter_count
+            fprintf("Bisection wolfe weak max iterations count. Couldn't satisfy conditions\n")
+            break
+        end
     end
     % fprintf("ENDED WOLFE Step size a=%f \n\n", a)
 end

@@ -11,7 +11,7 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
     %         elements in x
     %       - x: initial point of the search (1-by-n row vector)
     %       - line_search_method: integer indicating the line search method to use.
-    %         Possible values are: 'backtracking_wolfe_weak', 2: 'wolfe_strong', 3: 'backtracking_armijo', and 4: 'none'
+    %         Possible values are: 'bisection_wolfe_weak', 2: 'wolfe_strong', 3: 'backtracking_armijo', and 4: 'none'
     %       - c: parameter for the Armijo and Wolfe search methods
     %       - rho: parameter for the Armijo and Wolfe line search methods
     %       - a: initial step size for the line search methods
@@ -37,7 +37,7 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
 
     f_grad = gradient(f_sym, sym_vars);
     f_grad = function_handle(f_grad);
-    f_grad = @(v) f_grad(num2cell(v){:});
+    f_grad = @(v) vector_function(f_grad, v);
 
     fprintf("STARTED Line search using steepest descent\n")
     xall = {x};
