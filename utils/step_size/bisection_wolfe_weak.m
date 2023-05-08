@@ -1,4 +1,4 @@
-function a = bisection_wolfe_weak(f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_count=10)
+function a = bisection_wolfe_weak(f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_count=20)
     % Implementation of bisection wolfe weak condition
     %
     % Convergence of descent methods with backtracking 

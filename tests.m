@@ -11,6 +11,8 @@ function f = rosen_sym()
 end
 
 to_plot=false;
+% redundant search_x and search_y because we don't plot
+% todo use nargin, to configure the inputs of the functions better
 search_x = -1.8:0.1:1.2;
 search_y = -1.8:0.1:1.2;
 
@@ -69,7 +71,6 @@ iters_steepest = {100,
                 100,
                 100};
 
-count = 1;
 tol = 1e-6;
 for i=1:numel(line_search_methods)
     fprintf("\n")
@@ -94,13 +95,12 @@ for i=1:numel(line_search_methods)
                         eps=1e-6, 
                         max_iters=100, 
                         to_plot=to_plot);
-    assert(xmin, xmins_newton{count}, tol)
-    assert(fmin, fmins_newton{count}, tol)
-    assert(iter, iters_newton{count})
+    assert(xmin, xmins_newton{i}, tol)
+    assert(fmin, fmins_newton{i}, tol)
+    assert(iter, iters_newton{i})
     toc
 
     if strcmp(line_search_method, "none")
-        count += 1;
         continue # steepest descent is gonna fail to converge
     end
 
@@ -117,11 +117,8 @@ for i=1:numel(line_search_methods)
                         eps=1e-6, 
                         max_iters=100, 
                         to_plot=to_plot);
-    assert(xmin, xmins_steepest{count}, tol)
-    assert(fmin, fmins_steepest{count}, tol)
-    assert(iter, iters_steepest{count})
+    assert(xmin, xmins_steepest{i}, tol)
+    assert(fmin, fmins_steepest{i}, tol)
+    assert(iter, iters_steepest{i})
     toc
-
-
-    count += 1;
 end
