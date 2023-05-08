@@ -2,7 +2,7 @@
 \usepackage[utf8]{inputenc}
 
 
-%math  
+%math
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
@@ -13,7 +13,7 @@
 \usepackage{enumitem}
 \usepackage{ifthen}     % if-then-else command
 \usepackage{euscript}
-\usepackage{mathrsfs}   % 
+\usepackage{mathrsfs}   %
 \usepackage{tabu}
 \usepackage{rotating}
 \newtheorem{theorem}{Theorem}[section]     %
@@ -109,7 +109,7 @@
 \section{Introduction}
 \label{intro}
 
-\subsection{Study Phase} (this subsesction can be remove in final report)
+\subsection{Study Phase} (this subsection can be remove in final report)
 
 Part 1: Line Search methods
 
@@ -136,7 +136,7 @@ doi:10.1137/0916069. S2CID 6398414.
 
 \item Zhu, C.; Byrd, Richard H.; Lu, Peihuang; Nocedal, Jorge (1997). L-BFGS-B: Algorithm 778: L-BFGS-B, FORTRAN routines for large scale bound constrained optimization. ACM Transactions on Mathematical Software. 23 (4): 550–560.
 
-\item Morales, J. L.; Nocedal, J. (2011). Remark on quote;algorithm 778: L-BFGS-B: 
+\item Morales, J. L.; Nocedal, J. (2011). Remark on quote;algorithm 778: L-BFGS-B:
 Fortran subroutines for large-scale bound constrained optimization; ACM Transactions on Mathematical Software. 38: 1–4.
 
 \end{itemize}
@@ -151,7 +151,7 @@ Knowledge consolidation of math optimization around Quasi-Newton methods via con
 
 \subsection{Updates}
 \begin{itemize}
-    \item \textbf{Week 11-18/04/2023:} 
+    \item \textbf{Week 11-18/04/2023:}
     \begin{itemize}
         \item Add documentation to the functions `newton.m` and `steepest\_descent.m` with examples on how to use it. Otherwise, the jupyter notebook can be used as a reference point on how to call these methods.
         \item Add wolfe strong line search method. For the interpolation step, we use the simple bisection method instead of a more sophisticated solution with cubic or quadratic interpolation.
@@ -161,13 +161,17 @@ Knowledge consolidation of math optimization around Quasi-Newton methods via con
     \end{itemize}
     \item \textbf{Week 18-27/04/2023:}
     \begin{itemize}
-        \item Document how to execute the functions and provide a demo script along with the jupyter notebook
-        \item Use new starting points
-        \item Draw 3d plots using contour and 3d lines
-        \item Create a table with the results of the analysis
+        \item Document how to execute the functions and provide a demo script along with the jupyter notebook (moved to appendix).
+        \item Use new starting points.
+        \item Draw 3d plots using contour and 3d lines.
+        \item Create a table with the results of the analysis.
+    \end{itemize}
+    \item \textbf{Week 28-04/05/2023:}
+    \begin{itemize}
+        \item Implement the nonmonotone line search technique of Zhang-Hager.
     \end{itemize}
 \end{itemize}
- 
+
 \pagebreak
 
 \section{Chapter 2}
@@ -182,7 +186,7 @@ Problems listed on Chapter 2 of \cite{nocedal1999numerical}:
 Compute the gradient $\nabla f(x)$ and Hessian $\nabla^2 f(x)$ of the Rosenbrock function.
 
 \begin{equation}
-    f(x) = 100(x_2 -x_1^2)^2 + (1-x_1)^2 
+    f(x) = 100(x_2 -x_1^2)^2 + (1-x_1)^2
 \end{equation}
 
 Show that $x^{\ast} = (1, 1)^{T}$ is the only local minimizer of this function, and that the Hessian matrix at that point is positive definite.
@@ -193,7 +197,7 @@ Show that $x^{\ast} = (1, 1)^{T}$ is the only local minimizer of this function, 
 \begin{align}
     \nabla f(x) &= (\frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}) \\
     \nabla f(x) &= (2(200x_1^3 -200x_2x_1 + x_1- 1)), 200(x_2 - x_1^2)) \\
-    \nabla^2 f(x) &= 
+    \nabla^2 f(x) &=
     \begin{bmatrix}
     800x_1^2 - 400(x_2 - x_1^2) +2 & -400x_1 \\
     -400x_1 & 200
@@ -203,7 +207,7 @@ Show that $x^{\ast} = (1, 1)^{T}$ is the only local minimizer of this function, 
 To find all the possible stationary points and potentially the local minimums we solve $\nabla f(x) =0$ and the only root is $x^{*} = (1,1)$. To check if the stationary point is a local minimum and this case a global minimum, since there aren't any other stationary points, then we have to check if $\nabla^2 f(x^{*})$ is positive definitive and we have:
 
 \begin{equation}
-    \nabla^2 f(1,1) = 
+    \nabla^2 f(1,1) =
     \begin{bmatrix}
         802 & -400 \\
         -400 & 200
@@ -230,7 +234,7 @@ To find the stationary points we solve $\nabla f(x) = 0$ and we have:
 , thus the only root is $x^{*} = (-4, 3)$. To prove that it is a saddle point, we have to show that some of the eigenvalues of the Hessian matrix are positive and the rest negative. Thus we have:
 
 \begin{equation}
-    \nabla^2 f(x) = 
+    \nabla^2 f(x) =
     \begin{bmatrix}
         2 & 0 \\
         0 & -4
@@ -324,7 +328,7 @@ For the inequality, we have:
 
 \begin{align}
     f(x_{k+1}) &< f(x_k) \\
-    (1 + \frac{1}{2^{k+1}})^2 &< (1 + \frac{1}{2^k})^2 \\ 
+    (1 + \frac{1}{2^{k+1}})^2 &< (1 + \frac{1}{2^k})^2 \\
     k+1 &> k
 \end{align}
 
@@ -355,13 +359,13 @@ Let's suppose that given an isolated local minimer $x^{*}$ for a neighbor N, the
 Program the steepest descent and Newton algorithms using the a) backtracking line search with armijo or b) wolfe weak condition. c) the wolfe strong condition and d) without any condition. Use them to minimize the following functions:
 
 \begin{align*}
-    f_1(x,y) &= 100*(y-x)^2 + (1-x)^2, \quad [x_0,y_0] = [-1.8,-1.8], \quad f_{min}(1,1)=0  \\
-    f_2(x,y) &= x^2 + 4y^2 + 2xy, \quad [x_0,y_0] [-3,-3], \quad f_{min}(0,0) = 0 \\
-    f_3(x,y) &= (x+2y-7)^2 + (2x+y-5)^2, \quad [x_0,y_0] = [-9.5,9.5], \quad f_{min}(1,3) = 0 \\
-    f_4(x,y) &= 5x^4 + 6y^4 - 6x^2 + 2xy + 5y^2 + 15x -7y + 13, \quad [x_0,y_0] = [1.9,-1.9], \quad f_{min}(-1.1515,0.5455) = -6.4931 \\ 
-    f_5(x,y) &= (x^2)^{y^2+1} + (y^2)^{x^2+1}, \quad [x_0,y_0] = [-1.5,1.25], \quad f_{min}(0,0) = 0 \\
-    f_6(x,y) &= x^2 + y^3 - (z^4)^2 + (2xyz)^2 + (2xy-3yz+xz)^2, \quad [x_0,y_0,z_0] = [10,10,10], \quad f_{min}(0.0048605831,0.0016994507,X) = 0 \\
-    f_7(x,y) &= (x-1)^2 + (x-sqrt(y))^2 + (y-sqrt(z))^2 + (z-sqrt(k))^2, \quad [x_0,y_0,z_0,k_0] = [0.1,0.1,0.1,0.1], \quad f_{min}(0.999993,0.999983,0.999964,0.999912) = 1.13719^{-10} \\
+    f_1(x,y) &= 100 (y-x)^2 + (1-x)^2, \\ &\quad [x_0,y_0] = [-1.8,-1.8], \quad f_{min}(1,1)=0  \\
+    f_2(x,y) &= x^2 + 4y^2 + 2xy, \\ & \quad [x_0,y_0] [-3,-3], \quad f_{min}(0,0) = 0 \\
+    f_3(x,y) &= (x+2y-7)^2 + (2x+y-5)^2, \\ & \quad [x_0,y_0] = [-9.5,9.5], \quad f_{min}(1,3) = 0 \\
+    f_4(x,y) &= 5x^4 + 6y^4 - 6x^2 + 2xy + 5y^2 + 15x -7y + 13, \\ & \quad [x_0,y_0] = [1.9,-1.9], \quad f_{min}(-1.1515,0.5455) = -6.4931 \\
+    f_5(x,y) &= (x^2)^{y^2+1} + (y^2)^{x^2+1},\\ & \quad [x_0,y_0] = [-1.5,1.25], \quad f_{min}(0,0) = 0 \\
+    f_6(x,y,z) &= x^2 + y^3 - (z^4)^2 + (2xyz)^2 + (2xy-3yz+xz)^2, \\ & \quad [x_0,y_0,z_0] = [10,10,10], \quad f_{min}(0.0048605831,0.0016994507,X) = 0 \\
+    f_7(x,y,z,k) &= (x-1)^2 + (x-\sqrt{y})^2 + (y-\sqrt{z})^2 + (z-\sqrt{k})^2, \\ & \quad [x_0,y_0,z_0,k_0] = [0.1,0.1,0.1,0.1], \quad f_{min}(0.999993,0.999983,0.999964,0.999912) = 1.13719^{-10} \\
 \end{align*}
 
 For the analysis we have created the following table. For the plots you can check \ref{appendix}.
@@ -387,45 +391,45 @@ The main two functions of the implementation are the \verb|newton| and \verb|ste
 \begin{tabular}{|c|l|l|l|l|l|l|}
 \hline
 \multicolumn{1}{|l|}{Functions} & Methods                           & Step size               & iterations & error x1 & error x2  & error fvalue \\ \hline
-\multirow{8}{*}{f1}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 24         & 1e-10    & 1e-10     & 3.53e-21     \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 24         & 1e-10    & 1e-10     & 3.53e-21     \\ \cline{3-7} 
-                                &                                   & None                    & 5          & 1e-10    & 1e-10     & 5.81e-28     \\ \cline{3-7} 
-                                &                                   & Wolfe strong            & 24         & 1e-10    & 1e-10     & 4.21e-19     \\ \cline{2-7} 
-                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 100        & 0.317    & 0.536     & 1e-1         \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 100        & 0.2686   & 0.4633    & 7.23e-02     \\ \cline{3-7} 
-                                &                                   & None                    & X          &          &           &              \\ \cline{3-7} 
+\multirow{8}{*}{f1}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 24         & 1e-10    & 1e-10     & 3.53e-21     \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 24         & 1e-10    & 1e-10     & 3.53e-21     \\ \cline{3-7}
+                                &                                   & None                    & 5          & 1e-10    & 1e-10     & 5.81e-28     \\ \cline{3-7}
+                                &                                   & Wolfe strong            & 24         & 1e-10    & 1e-10     & 4.21e-19     \\ \cline{2-7}
+                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 100        & 0.317    & 0.536     & 1e-1         \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 100        & 0.2686   & 0.4633    & 7.23e-02     \\ \cline{3-7}
+                                &                                   & None                    & X          &          &           &              \\ \cline{3-7}
                                 &                                   & Wolfe strong            & X          &          &           &              \\ \hline
-\multirow{8}{*}{f2}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7} 
-                                &                                   & None                    & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7} 
-                                &                                   & Wolfe strong            & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{2-7} 
-                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 24         & 5.36e-07 & 1.34e-07  & 2.15e-13     \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 24         & 5.36e-07 & 1.34e-07  & 2.15e-13     \\ \cline{3-7} 
-                                &                                   & None                    & X          &          &           &              \\ \cline{3-7} 
+\multirow{8}{*}{f2}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7}
+                                &                                   & None                    & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{3-7}
+                                &                                   & Wolfe strong            & 1          & 1e-15    & 8.8e-16   & 2.56e-30     \\ \cline{2-7}
+                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 24         & 5.36e-07 & 1.34e-07  & 2.15e-13     \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 24         & 5.36e-07 & 1.34e-07  & 2.15e-13     \\ \cline{3-7}
+                                &                                   & None                    & X          &          &           &              \\ \cline{3-7}
                                 &                                   & Wolfe strong            & 100        & 6.38e-06 & -5.91e-07 & 4.97e-11     \\ \hline
-\multirow{8}{*}{f3}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 1          & 0        & 0         & 0            \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 1          & 0        & 0         & 0            \\ \cline{3-7} 
-                                &                                   & None                    & 1          & 0        & 0         & 0            \\ \cline{3-7} 
-                                &                                   & Wolfe strong            & 1          & 0        & 0         & 0            \\ \cline{2-7} 
-                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 44         & 1e-06    & 15e-06    & 5.33e-14     \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 11         & 14e-06   & 14e-06    & 3.99e-15     \\ \cline{3-7} 
-                                &                                   & None                    & X          &          &           &              \\ \cline{3-7} 
+\multirow{8}{*}{f3}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 1          & 0        & 0         & 0            \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 1          & 0        & 0         & 0            \\ \cline{3-7}
+                                &                                   & None                    & 1          & 0        & 0         & 0            \\ \cline{3-7}
+                                &                                   & Wolfe strong            & 1          & 0        & 0         & 0            \\ \cline{2-7}
+                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 44         & 1e-06    & 15e-06    & 5.33e-14     \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 11         & 14e-06   & 14e-06    & 3.99e-15     \\ \cline{3-7}
+                                &                                   & None                    & X          &          &           &              \\ \cline{3-7}
                                 &                                   & Wolfe strong            & 100        & 1e-06    & 1e-06     & 7.25e-14     \\ \hline
-\multirow{8}{*}{f4}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 85         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 85         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7} 
-                                &                                   & None                    & 29         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7} 
-                                &                                   & Wolfe strong            & 100        & 1.15     & 0.3       & 11           \\ \cline{2-7} 
-                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 16         & 1e-03    & 2e-02     & 4e-03        \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 15         & 1e-03    & 2e-02     & 4e-03        \\ \cline{3-7} 
-                                &                                   & None                    & X          &          &           &              \\ \cline{3-7} 
+\multirow{8}{*}{f4}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 85         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 85         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7}
+                                &                                   & None                    & 29         & 1e-03    & 2e-02     & 3e-03        \\ \cline{3-7}
+                                &                                   & Wolfe strong            & 100        & 1.15     & 0.3       & 11           \\ \cline{2-7}
+                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & 16         & 1e-03    & 2e-02     & 4e-03        \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 15         & 1e-03    & 2e-02     & 4e-03        \\ \cline{3-7}
+                                &                                   & None                    & X          &          &           &              \\ \cline{3-7}
                                 &                                   & Wolfe strong            & 16         & 1e-03    & 2e-02     & 4e-03        \\ \hline
-\multirow{8}{*}{f5}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 7          & 4e-13    & 1e-12     & 2.23e-24     \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & 7          & 4e-13    & 1e-12     & 2.23e-24     \\ \cline{3-7} 
-                                &                                   & None                    & X          &          &           &              \\ \cline{3-7} 
-                                &                                   & Wolfe strong            & -          &          &           &              \\ \cline{2-7} 
-                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & -          &          &           &              \\ \cline{3-7} 
-                                &                                   & Backtracking armijo     & -          &          &           &              \\ \cline{3-7} 
-                                &                                   & None                    & -          &          &           &              \\ \cline{3-7} 
+\multirow{8}{*}{f5}             & \multirow{4}{*}{Newton}           & Backtracking wolfe weak & 7          & 4e-13    & 1e-12     & 2.23e-24     \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & 7          & 4e-13    & 1e-12     & 2.23e-24     \\ \cline{3-7}
+                                &                                   & None                    & X          &          &           &              \\ \cline{3-7}
+                                &                                   & Wolfe strong            & -          &          &           &              \\ \cline{2-7}
+                                & \multirow{4}{*}{Steepest descent} & Backtracking wolfe weak & -          &          &           &              \\ \cline{3-7}
+                                &                                   & Backtracking armijo     & -          &          &           &              \\ \cline{3-7}
+                                &                                   & None                    & -          &          &           &              \\ \cline{3-7}
                                 &                                   & Wolfe strong            & -          &          &           &              \\ \hline
 \end{tabular}
 \end{table}
@@ -442,16 +446,16 @@ The main two functions of the implementation are the \verb|newton| and \verb|ste
 % Program the steepest descent and Newton algorithms using the backtracking line
 % search, Algorithm 3.1. Use them to minimize the Rosenbrock function (2.22). Set the initial
 % step length $a_0 = 1$ and print
-% the step length used by each method at each iteration. 
+% the step length used by each method at each iteration.
 
 % First try the initial point $x_0 = (1.2, 1.2)^{T}$
-% and then the more difficult starting point 
+% and then the more difficult starting point
 % $x_0 = (-1.2, 1)^{T}$ .
 
 % Follow ups:
 % \begin{itemize}
 %     \item Try it without the Armijo condition.
-%     \item For the line search of the step size, instead of the Armijo condition, use a weak Wolfe line search. 
+%     \item For the line search of the step size, instead of the Armijo condition, use a weak Wolfe line search.
 %     \item Use wolfe strong line search.
 %     \item Test it for different functions with more than 2 dimensions.
 % \end{itemize}
@@ -491,6 +495,14 @@ The main two functions of the implementation are the \verb|newton| and \verb|ste
 
 \lstinputlisting{code/utils/step_size/wolfe_strong.m}
 
+\subsubsection{armijo\_condition.m}
+
+\lstinputlisting{code/utils/step_size/armijo_condition.m}
+
+\subsubsection{nonmonotone\_attrs.m}
+
+\lstinputlisting{code/utils/step_size/nonmonotone_attrs.m}
+
 \subsubsection{step\_size.m}
 
 \lstinputlisting{code/utils/step_size/step_size.m}
@@ -507,28 +519,32 @@ The main two functions of the implementation are the \verb|newton| and \verb|ste
 
 \lstinputlisting{code/utils/sym2fun.m}
 
+\subsubsection{demo.m}
+
+\lstinputlisting{code/demo.m}
+
 % \lstinputlisting{code/utils/gradients/mutlidim_grad.m}
 
 \subsection{Conclusions}
 
 \begin{itemize}
     \item Without any step search method and using a fixed step length of 1, the steepest descent wasn't able to minimize the function. Due to the very high values of the gradient along with the step length, the algorithm has complete diverged and the x reached to Inf even within the first iterations.
-    
+
     \item Without any step search method, the Newton method converged very close to the theoretical solution of $[1,1]^T$ in 5 iterations for the starting point of $[1.2,1.2]^T$ and in 6 for $[-1.2, 1]^T$.
-    
+
     \item Using the Armijo condition for the Newton Method has similar performance with the above method, but now we are moving more carefully and slowly. For the point $[1.2,1.2]^T$, we converged to a solution within 8 iterations. For the point $[-1.2, 1]$, we converged within 21 iterations.
-        
+
     \item Using the Armijo condition for the steepest descent, we can notice that the step size is adjusted and now the algorithm hasn't diverged compared to the fixed step size method mentioned above. But it seems that it is advancing very slowly. Having a threshold of 100 maximum iterations, the algorithm didn't converged.
-    
-    \item Using the wolfe weak conditions, a new condition needs to be fullfiled for the line search. Thus making the choice of the step size even more sophisticated with values very close to 0 (1e-16). This resulted to a very slow progress. Practically the algorithm has been stucked. 
-    
+
+    \item Using the wolfe weak conditions, a new condition needs to be fullfiled for the line search. Thus making the choice of the step size even more sophisticated with values very close to 0 (1e-16). This resulted to a very slow progress. Practically the algorithm has been stucked.
+
     The same applies for the steepest descent, but the step size values were in the range (1e-1, 1e-4), same as the armijo condition.
 
     This contradicts with the intention of the wolfe condition. It is supposed to rule out small values of $\alpha$ and make the search to move faster. Why it contradicts?
 
     \item A very special case of the last function tested above ($f_7$), is where the gradient of the function contains the square root of the coordinates. Thus if during the iterative approach, a point with negative coordinates will occur, the result of the gradient will have an imaginary field, causing the algorithm to break. How to resolve this?
-    
-\end{itemize} 
+
+\end{itemize}
 
 
 \section{Wrap up}
@@ -539,7 +555,7 @@ Every iterative algorithm for line search is based on:
 
 The research interest arises on the choice of the step size $\alpha$ and the direction $p_k$, the convergence, the rate of it and the derivative requirements (is the knowledge of first or second order derivatives required?).
 
-For the direction,  
+For the direction,
 the core idea of the line search methods lies into the Taylor approximation of a function near a point:
 
 \[f(x_k + \alpha p) = f(x_k) + a p^T \nabla f_k + \frac{1}{2} \alpha^2 p^T \nabla^2 f(x_k + tp) p\]
@@ -569,7 +585,7 @@ The identity matrix.
 
 \subsection{Convergence}
 
-It can be shown from Zoutendijk's theorem that if the line search algorithm satisfies (weak) Wolfe's conditions (similar results also hold for strong Wolfe and Goldstein conditions) and has a search direction that makes an angle with the steepest descent direction that is bounded away from 90°, the algorithm is globally convergent. 
+It can be shown from Zoutendijk's theorem that if the line search algorithm satisfies (weak) Wolfe's conditions (similar results also hold for strong Wolfe and Goldstein conditions) and has a search direction that makes an angle with the steepest descent direction that is bounded away from 90°, the algorithm is globally convergent.
 
 \subsection{Comparison of methods}
 
@@ -579,13 +595,13 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
     \item Steepest descent method advantage is the usage of only first derivatives, and making it the least computationally expensive algorithm per iteration. The main disadvantage is the rate of convergence. It can be extremely slow.
 
     \item Convergence is dependent on both the step size $\alpha$ and the direction $p_k$. Usually for methods to converge, step size should satisfy the wolfe conditions and for the $p_k$, should not be close to orthogonality with the $\nabla f_k$.
-    
-    \item Newton's method advantage is the fast convergence (quadratic). The disadvantage is the need of the second derivatives (the hessian matrix). 
-    
+
+    \item Newton's method advantage is the fast convergence (quadratic). The disadvantage is the need of the second derivatives (the hessian matrix).
+
     \item Newton's method step size is usually 1. It doesn't require sophisticated algorithms like the steepest descent, to find a proper step size.
-    
+
     \item Quasi-Newton method aims to solve the problems of the two aforementioned methods. Same as the Newton technique, but the hessian matrix is estimated using the knowledge of the previous calculated first derivatives. The drawback of approximation is that the convergence from quadratic becomes superlinear, but still usually faster than steepest descent.
-    
+
 \end{itemize}
 
 \label{appendix}
@@ -599,4 +615,3 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 
 \end{document}
-
