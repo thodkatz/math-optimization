@@ -1,6 +1,6 @@
 %% Simulation for the functions listed on Chapter 3 of the doc
 
-format longE
+format short e
 
 # setup the path to include the 'utils' directory
 directory = pwd
@@ -114,6 +114,4 @@ table = simulation(functions_info, line_search_methods);
 
 dfile = 'simulation1.csv';
 if exist(dfile, 'file') ; delete(dfile); end
-diary(dfile)
-dataframe(table)
-diary off
+cell2csv(dfile,table)

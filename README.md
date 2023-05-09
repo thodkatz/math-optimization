@@ -5,6 +5,7 @@
 ```
 pkg load symbolic
 pkg load dataframe
+pkg load io
 ```
 
 If not installed
