@@ -1,6 +1,6 @@
 # Dependencies
 
-~$HOME/.octaverc~
+`$HOME/.octaverc`
 
 ```
 pkg load symbolic
