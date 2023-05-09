@@ -1,5 +1,10 @@
 %% Simulation for the functions listed on Chapter 4 of the doc
 
+dfile = 'simulation2.txt';
+if exist(dfile, 'file') ; delete(dfile); end
+diary(dfile)
+
+
 format longE
 
 # setup the path to include the 'utils' directory
@@ -127,3 +132,5 @@ search_x = -1.8:0.1:1.2;
 search_y = -1.8:0.1:1.2;
 
 line_search_methods = {'hanger_zhang_backtracking_armijo'};
+
+diary off

@@ -1,5 +1,9 @@
 %% Simulation for the functions listed on Chapter 3 of the doc
 
+dfile = 'simulation1.txt';
+if exist(dfile, 'file') ; delete(dfile); end
+diary(dfile)
+
 format longE
 
 # setup the path to include the 'utils' directory
@@ -66,7 +70,7 @@ starting_points = {[-1.8, -1.8]',
                     [1.9,-1.9]',
                     [-1.5,1.25]',
                     [10,10,10]',
-                    [0.1,0.1,0.1,0.1]'}
+                    [0.1,0.1,0.1,0.1]'};
 expected_fmin = {0,
                 0,
                 0,
@@ -92,6 +96,7 @@ line_search_methods = {'none',
                         'backtracking_armijo', 
                         'wolfe_strong', 
                         'bisection_wolfe_weak',
+                        'bisection_goldstein',
                         'hanger_zhang_backtracking_armijo', 
                         'hanger_zhang_bisection_wolfe_weak',
                         'hanger_zhang_wolfe_strong',
@@ -102,6 +107,7 @@ line_search_methods = {'none',
  table = {'function', 'method', 'step size', 'iterations', 'error x1', 'error x2', 'error fvalue'};
 
 count = 1
+memory_limit = 50; % for grippo
 for i=1:numel(functions)
     fun = functions{i}
     starting_point = starting_points{i}
@@ -115,7 +121,6 @@ for i=1:numel(functions)
             rho = 0.5;
         end
         if startsWith(line_search_method, "grippo")
-            memory_limit = 10;
             [xmin, fmin, iter] = newton(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot, memory_limit);
         else
             [xmin, fmin, iter] = newton(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot);
@@ -128,7 +133,6 @@ for i=1:numel(functions)
         line_search_method = line_search_methods{j}
         try
             if startsWith(line_search_method, "grippo")
-                memory_limit = 10;
                 [xmin, fmin, iter] = steepest_descent(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot, memory_limit);
             else
                 [xmin, fmin, iter] = steepest_descent(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot);
@@ -146,3 +150,5 @@ end
 
 dataframe(table)
 
+
+diary off
