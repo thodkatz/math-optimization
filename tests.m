@@ -20,9 +20,9 @@ line_search_methods = {'none',
                         'backtracking_armijo', 
                         'wolfe_strong', 
                         'bisection_wolfe_weak',
-                        'nonmonotone_backtracking_armijo', 
-                        'nonmonotone_bisection_wolfe_weak',
-                        'nonmonotone_wolfe_strong'};
+                        'hanger_zhang_backtracking_armijo', 
+                        'hanger_zhang_bisection_wolfe_weak',
+                        'hanger_zhang_wolfe_strong'};
 xmins_newton = {[9.999999999999893e-01;9.999999999999787e-01], 
                 [9.999999999816617e-01;9.999999999576692e-01], 
                 [9.999999547008681e-01;9.999999073667162e-01],
@@ -75,7 +75,7 @@ tol = 1e-6;
 for i=1:numel(line_search_methods)
     fprintf("\n")
     line_search_method = line_search_methods{i}
-    if strcmp(line_search_method, 'wolfe_strong') || strcmp(line_search_method, 'nonmonotone_wolfe_strong')
+    if strcmp(line_search_method, 'wolfe_strong') || strcmp(line_search_method, 'hanger_zhang_wolfe_strong')
         c = [1e-4 0.9];
         rho = 2;
     else

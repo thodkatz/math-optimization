@@ -92,9 +92,9 @@ line_search_methods = {'none',
                         'backtracking_armijo', 
                         'wolfe_strong', 
                         'bisection_wolfe_weak',
-                        'nonmonotone_backtracking_armijo', 
-                        'nonmonotone_bisection_wolfe_weak',
-                        'nonmonotone_wolfe_strong'};
+                        'hanger_zhang_backtracking_armijo', 
+                        'hanger_zhang_bisection_wolfe_weak',
+                        'hanger_zhang_wolfe_strong'};
 
  table = {'function', 'method', 'step size', 'iterations', 'error x1', 'error x2', 'error fvalue'};
 
@@ -104,7 +104,7 @@ for i=1:numel(functions)
     starting_point = starting_points{i}
     for j=1:numel(line_search_methods)
         line_search_method = line_search_methods{j}
-        if strcmp(line_search_method, 'wolfe_strong') || strcmp(line_search_method, 'nonmonotone_wolfe_strong')
+        if strcmp(line_search_method, 'wolfe_strong') || strcmp(line_search_method, 'hanger_zhang_wolfe_strong')
             c = [1e-4 0.9];
             rho = 2;
         else
@@ -127,6 +127,7 @@ for i=1:numel(functions)
         table(end+1,:) = {i, "newton", line_search_method, iter, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_fmin{i},fmin)};
     end
     for j=1:numel(line_search_methods)
+        line_search_method = line_search_methods{j}
         try
             [xmin, fmin, iter] = steepest_descent(fun, 
                                 starting_point, 

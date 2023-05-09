@@ -70,12 +70,12 @@ function [xmin, fmin, iter] = newton(f_sym, x, line_search_method, search_domain
             break
         end
 
-        if startsWith(line_search_method, "nonmonotone")
+        if startsWith(line_search_method, "hanger_zhang")
             if iter == 1
                 ck = f(x);
                 qk = 1;
             else
-                [ck, qk] = nonmonotone_attrs(f(x), ck, qk);
+                [ck, qk] = hanger_zhang_attrs(f(x), ck, qk);
             end
         else
             ck = f(x);
