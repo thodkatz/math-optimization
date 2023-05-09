@@ -1,4 +1,4 @@
-function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=true)
+function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=true, varargin)
     % STEEPEST DESCENT Find the minimum of a function using the Newton method
     %
     % USAGE:
@@ -39,6 +39,11 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
     f_grad = function_handle(f_grad);
     f_grad = @(v) vector_function(f_grad, v);
 
+    if startsWith(line_search_method, "grippo")
+        assert(numel(varargin) == 1)
+        memory_limit = varargin{1};
+    end
+
     fprintf("STARTED Line search using steepest descent\n")
     xall = {x};
     steps_all = [a];
@@ -59,10 +64,16 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
                 ck = f(x);
                 qk = 1;
             else
-                [ck, qk] = hanger_zhang_attrs(f(x), ck, qk);
+                [ck, qk] = hanger_zhang_attrs(f(x), ck, qk); # full nonmonotone
+            end
+        elseif startsWith(line_search_method, "grippo")
+            if iter == 1
+                ck = f(x);
+            elseif iter < memory_limit
+                ck = max(ck,f(x));
             end
         else
-            ck = f(x);
+            ck = f(x); # monotone
         end
         step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck);
         x += step*pk;

@@ -2,6 +2,8 @@ function step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck)
     split_method = strsplit(line_search_method, "_");
     if startsWith(line_search_method, "hanger_zhang")
         line_search_method = strjoin(split_method(1,3:end), "_");
+    elseif startsWith(line_search_method, "grippo")
+        line_search_method = strjoin(split_method(1,2:end), "_");
     end
 
     if strcmp(line_search_method, "backtracking_armijo") == 1

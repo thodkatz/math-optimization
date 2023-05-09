@@ -60,4 +60,6 @@ end
 
 search_x = -3:0.2:0.4;
 search_y = -3:0.2:0.4;
-[xmin, fmin] = newton(f1_sym, [-3,-3]', 'bisection_wolfe_weak', search_x, search_y)
+memory_limit = 100;
+[xmin, fmin] = newton(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
+[xmin, fmin, iter] = steepest_descent(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);

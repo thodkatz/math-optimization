@@ -94,7 +94,10 @@ line_search_methods = {'none',
                         'bisection_wolfe_weak',
                         'hanger_zhang_backtracking_armijo', 
                         'hanger_zhang_bisection_wolfe_weak',
-                        'hanger_zhang_wolfe_strong'};
+                        'hanger_zhang_wolfe_strong',
+                        'grippo_backtracking_armijo',
+                        'grippo_bisection_wolfe_weak',
+                        'grippo_wolfe_strong'};
 
  table = {'function', 'method', 'step size', 'iterations', 'error x1', 'error x2', 'error fvalue'};
 
@@ -104,24 +107,19 @@ for i=1:numel(functions)
     starting_point = starting_points{i}
     for j=1:numel(line_search_methods)
         line_search_method = line_search_methods{j}
-        if strcmp(line_search_method, 'wolfe_strong') || strcmp(line_search_method, 'hanger_zhang_wolfe_strong')
+        if endsWith(line_search_method, 'wolfe_strong')
             c = [1e-4 0.9];
             rho = 2;
         else
             c = 0.1;
             rho = 0.5;
         end
-        [xmin, fmin, iter] = newton(fun, 
-                            starting_point, 
-                            line_search_method, 
-                            search_x, 
-                            search_y, 
-                            c, 
-                            rho, 
-                            a=1, 
-                            eps=1e-6, 
-                            max_iters=100, 
-                            to_plot=to_plot);
+        if startsWith(line_search_method, "grippo")
+            memory_limit = 10;
+            [xmin, fmin, iter] = newton(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot, memory_limit);
+        else
+            [xmin, fmin, iter] = newton(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot);
+        end
 
         expected_x = expected_xmin{i};
         table(end+1,:) = {i, "newton", line_search_method, iter, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_fmin{i},fmin)};
@@ -129,17 +127,13 @@ for i=1:numel(functions)
     for j=1:numel(line_search_methods)
         line_search_method = line_search_methods{j}
         try
-            [xmin, fmin, iter] = steepest_descent(fun, 
-                                starting_point, 
-                                line_search_method, 
-                                search_x, 
-                                search_y, 
-                                c, 
-                                rho, 
-                                a=1, 
-                                eps=1e-6, 
-                                max_iters=100, 
-                                to_plot=to_plot);
+            if startsWith(line_search_method, "grippo")
+                memory_limit = 10;
+                [xmin, fmin, iter] = steepest_descent(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot, memory_limit);
+            else
+                [xmin, fmin, iter] = steepest_descent(fun, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=100, to_plot=to_plot);
+            end
+
             expected_x = expected_xmin{i};
             table(end+1,:) = {i, "steepest descent", line_search_method, iter, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_fmin{i},fmin)};
         catch err
