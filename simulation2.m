@@ -1,10 +1,5 @@
 %% Simulation for the functions listed on Chapter 4 of the doc
 
-dfile = 'simulation2.txt';
-if exist(dfile, 'file') ; delete(dfile); end
-diary(dfile)
-
-
 format longE
 
 # setup the path to include the 'utils' directory
@@ -12,17 +7,21 @@ directory = pwd
 addpath(genpath(directory))
 
 function [f,startp,xmin,fmin] = rosen_extended_sym(n)
-    syms x1 x2 real
+    x1 = sym('x1');
+    x2 = sym('x2');
     f = 100*(x2-x1^2)^2 + (1-x1)^2;
 
     startp = [-1.2,1];
     xmin = [1,1];
 
     for i = 3:n
-        syms(['x', num2str(i)], 'real');
-        ith = num2str(i);
-        ith_prev = num2str(i-1);
-        f = f + (1 - sym(['x', ith_prev]))^2 + 100*(sym(['x', ith]) - sym(['x', ith_prev])^2)^2;
+        sym_ith = sym(['x',num2str(i)]);
+        if i == 3
+            sym_ith_prev = x2;
+        else
+            sym_ith_prev = sym(['x',num2str(i-1)]);
+        end
+        f += (1 - sym_ith_prev)^2 + 100*(sym_ith - sym_ith_prev^2)^2;
 
         if mod(i,2) == 0
             startp(end+1) = 1;
@@ -35,6 +34,20 @@ function [f,startp,xmin,fmin] = rosen_extended_sym(n)
     xmin = xmin';
     fmin = 0;
 end
+
+function [f,startp,xmin,fmin] = rosen2()
+    [f,startp,xmin,fmin] = rosen_extended_sym(2);
+end
+
+function [f,startp,xmin,fmin] = rosen10()
+    [f,startp,xmin,fmin] = rosen_extended_sym(10);
+end
+
+function [f,startp,xmin,fmin] = rosen20()
+    [f,startp,xmin,fmin] = rosen_extended_sym(20);
+end
+
+
 
 function [f,startp,xmin,fmin] = wood()
     syms x1 x2 x3 x4 real
@@ -65,25 +78,34 @@ function [f,startp,xmin,fmin] = trig(n)
     f = n + (1-cos(x1)) - sin(x1) - cos(x1);
     startp = [1/(5*n)];
     xmin = [0];
+    sym_vars = {x1};
     for j=2:n
-        syms(['x', num2str(j)], 'real');
         sym_var = sym(['x', num2str(j)]);
+        sym_vars{end+1} = sym_var;
         f += cos(sym_var);
         startp(end+1) = 1/(5*n);
         xmin(end+1) = 0;
     end
 
     for i=2:n
-        sym_var = sym(['x', num2str(i)]);
+        sym_var = sym_vars{i};
         f += n + i*(1-cos(sym_var)) - sin(sym_var) - cos(x1);
         for j=2:n
-            sym_var = sym(['x', num2str(j)]);
+            sym_var = sym_vars{j};
             f += cos(sym_var);
         end
     end
     startp = startp';
     xmin = xmin';
     fmin = 0;
+end
+
+function [f,startp,xmin,fmin] = trig20()
+    [f,startp,xmin,fmin] = trig(20);
+end
+
+function [f,startp,xmin,fmin] = trig60()
+    [f,startp,xmin,fmin] = trig(60);
 end
 
 
@@ -99,31 +121,17 @@ function [f1,f2,startp,xmin,fmin] = helical()
     fmin = 0;
 end
 
-functions = {rosen_extended_sym, 
-            wood, 
-            powell, 
-            cube, 
-            trig, 
-            helical};
 
-starting_points = {[-1.8, -1.8]',
-                    [-3,-3]',
-                    [-9.5,9.5]',
-                    [1.9,-1.9]',
-                    [-1.5,1.25]',
-                    [10,10,10]'};
-expected_fmin = {0,
-                0,
-                0,
-                -6.4931,
-                0,
-                0};
-expected_xmin = {[1,1]',
-                    [0,0]',
-                    [1,3]',
-                    [-1.1515,0.5455]',
-                    [0,0]',
-                    [0.0048605831,0.0016994507, 0]'};
+
+functions_info = {@rosen2,
+            @rosen10,
+            @rosen20,
+            @wood, 
+            @powell, 
+            @cube, 
+            @trig20,
+            @trig60};
+
 
 to_plot=false;
 % redundant search_x and search_y because we don't plot
@@ -131,6 +139,21 @@ to_plot=false;
 search_x = -1.8:0.1:1.2;
 search_y = -1.8:0.1:1.2;
 
-line_search_methods = {'hanger_zhang_backtracking_armijo'};
+line_search_methods = {'backtracking_armijo',
+                        'bisection_wolfe_weak',
+                        'bisection_goldstein',
+                        'hanger_zhang_backtracking_armijo',
+                        'hanger_zhang_bisection_wolfe_weak',
+                        'hanger_zhang_bisection_goldstein',
+                        'grippo_backtracking_armijo',
+                        'grippo_bisection_wolfe_weak',
+                        'grippo_bisection_goldstein'};
 
+
+table = simulation(functions_info, line_search_methods);
+
+dfile = 'simulation2.csv';
+if exist(dfile, 'file') ; delete(dfile); end
+diary(dfile)
+dataframe(table)
 diary off
