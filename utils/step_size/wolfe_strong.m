@@ -1,4 +1,9 @@
 function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, max_iters=20)
+    % Jorge Nocedal and Stephen J Wright. Numerical optimization. Springer, 1999
+    % pages: 60-61
+    %
+    % https://github.com/scipy/scipy/blob/v1.6.3/scipy/optimize/linesearch.py#L193-L335
+
     c1 = c(1);
     c2 = c(2);
 

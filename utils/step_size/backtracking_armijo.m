@@ -1,4 +1,7 @@
 function a = backtracking_armijo(f, f_grad, x, pk, a, rho, c, ck, iter_count=10)
+    % Jorge Nocedal and Stephen J Wright. Numerical optimization. Springer, 1999
+    % page: 37
+    %
     % Backtracking line search using the sufficient decrease condition (armijo).
 
     iter = 0;

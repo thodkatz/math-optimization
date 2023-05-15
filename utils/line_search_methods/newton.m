@@ -83,6 +83,10 @@ function [xmin, fmin, iter] = newton(f_sym, x, line_search_method, search_domain
                 [ck, qk] = hanger_zhang_attrs(f(x), ck, qk); # full nonmonotone
             end
         elseif startsWith(line_search_method, "grippo");
+            % source:
+            % A NONMONOTONE LINE SEARCH TECHNIQUE
+            % FOR NEWTON’S METHOD
+            % L. GRIPPOf, F. LAMPARIELLOf AND S. LUCIDI"
             if iter == 1
                 ck = f(x);
             elseif iter < memory_limit

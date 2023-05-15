@@ -8,15 +8,23 @@ function a = bisection_curvature(curvature_condition, f, f_grad, x, pk, a, c=[1e
     % Convergence of descent methods with backtracking 
     % (Armijo) linesearch. Bisection algorithm for weak Wolfe
     % conditions, Anton Evgrafov
+    is_goldstein = strcmp(curvature_condition,"goldstein");
+    is_wolfe = strcmp(curvature_condition,"weak wolfe");
 
-    c1 = c(1);
-    c2 = c(2);
+    if is_goldstein
+        c1 = c;
+        c2 = 1-c;
+        assert (c1>0 && c1<0.5)
+    elseif is_wolfe
+        c1 = c(1);
+        c2 = c(2);
+    else
+        error(-1)
+    end
 
     amin = 0;
     amax = inf;
 
-    is_goldstein = strcmp(curvature_condition,"goldstein");
-    is_wolfe = strcmp(curvature_condition,"weak wolfe");
     if not(is_goldstein || is_wolfe)
         error(-1)
     end
@@ -61,5 +69,5 @@ function b = curvature_condition_weak_wolfe(f_grad, x, pk, a, c, phi0)
 end
 
 function b = curvature_condition_goldstein(f, f_grad, fval, x, pk, a, c, phi0)
-    b = f(x + a*pk) < fval + (1-c)*a*phi0;
+    b = f(x + a*pk) < fval + c*a*phi0;
 end
