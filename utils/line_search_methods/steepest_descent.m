@@ -1,4 +1,4 @@
-function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=true, varargin)
+function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_function_evaluations] = steepest_descent(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=true, varargin)
     % STEEPEST DESCENT Find the minimum of a function using the Newton method
     %
     % USAGE:
@@ -31,13 +31,16 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
     %
 
     f = function_handle(f_sym);
-    f = @(v) f(num2cell(v){:});
+    f = @(v, n=0) vector_function(f, v, n);
 
     sym_vars = symvar(f_sym);
 
     f_grad = gradient(f_sym, sym_vars);
     f_grad = function_handle(f_grad);
-    f_grad = @(v) vector_function(f_grad, v);
+    f_grad = @(v, n=0) vector_function(f_grad, v, n);
+
+    number_of_function_evaluations = 0; 
+    number_of_gradient_function_evaluations = 0;
 
     if startsWith(line_search_method, "grippo")
         assert(numel(varargin) == 1)
@@ -52,7 +55,8 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
             error("Failed to converge. Inf value reached")
         end
 
-        pk = -f_grad(x);
+        [pk, number_of_gradient_function_evaluations] = f_grad(x, number_of_gradient_function_evaluations);
+        pk = -pk;
         
         # check for convergence
         if norm(pk) < eps
@@ -64,18 +68,24 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
                 ck = f(x);
                 qk = 1;
             else
-                [ck, qk] = hanger_zhang_attrs(f(x), ck, qk); # full nonmonotone
+                [fval, number_of_function_evaluations] = f(x, number_of_function_evaluations);
+                [ck, qk] = hanger_zhang_attrs(fval, ck, qk); # full nonmonotone
             end
-        elseif startsWith(line_search_method, "grippo")
+        elseif startsWith(line_search_method, "grippo");
+            % source:
+            % A NONMONOTONE LINE SEARCH TECHNIQUE
+            % FOR NEWTON’S METHOD
+            % L. GRIPPOf, F. LAMPARIELLOf AND S. LUCIDI"
             if iter == 1
-                ck = f(x);
+                [ck, number_of_function_evaluations] = f(x, number_of_function_evaluations);
             elseif iter < memory_limit
+                [fval, number_of_function_evaluations] = f(x, number_of_function_evaluations);
                 ck = max(ck,f(x));
             end
         else
-            ck = f(x); # monotone
+            [ck, number_of_function_evaluations] = f(x, number_of_function_evaluations); # monotone
         end
-        step = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck);
+        [step, number_of_function_evaluations, number_of_gradient_function_evaluations] = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck, number_of_function_evaluations, number_of_gradient_function_evaluations);
         x += step*pk;
         steps_all(end+1) = step;
         xall{end+1} = x;
@@ -85,6 +95,8 @@ function [xmin, fmin, iter] = steepest_descent(f_sym, x, line_search_method, sea
     xmin = x
     fmin = f(xmin)
     iter
+    number_of_function_evaluations
+    number_of_gradient_function_evaluations
 
     if to_plot
         plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)

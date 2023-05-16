@@ -1,6 +1,7 @@
-function ret = vector_function(fun_handler, vector)
+function [ret,number_of_evaluations] = vector_function(fun_handler, vector, number_of_evaluations)
     if nargin(fun_handler) == numel(vector)
         ret = fun_handler(num2cell(vector){:});
+        number_of_evaluations += 1;
     elseif nargin(fun_handler) ~= 0
         arg_list = get_arg_names(fun_handler);
         filt_arg = [];
@@ -10,6 +11,7 @@ function ret = vector_function(fun_handler, vector)
         end
         filt_arg = filt_arg';
         ret = fun_handler(num2cell(filt_arg){:});
+        number_of_evaluations += 1;
     else
         ret = fun_handler();
     end

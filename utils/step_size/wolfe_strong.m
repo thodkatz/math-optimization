@@ -1,4 +1,4 @@
-function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, max_iters=20)
+function [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, max_iters=20, number_of_function_evaluations, number_of_gradient_function_evaluations)
     % Jorge Nocedal and Stephen J Wright. Numerical optimization. Springer, 1999
     % pages: 60-61
     %
@@ -11,22 +11,24 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, m
     a = a_max/2;
     a_prev = a0;
 
-    phi_derivative0 = dot(f_grad(x),pk);
+    [fgrad, number_of_gradient_function_evaluations] = f_grad(x, number_of_gradient_function_evaluations);
+    phi_derivative0 = dot(fgrad,pk);
     phi_prev = ck;
 
     iter = 0;
     % fprintf("\nSTARTED Wolfe strong line search...\n")
     while iter < max_iters
-        phi = f(x + a*pk);
+        [phi, number_of_function_evaluations] = f(x + a*pk, number_of_function_evaluations);
         if phi > ck + c1*a*phi_derivative0 || (iter > 0 && phi > phi_prev)
-            a = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2);
+            [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2, 10, number_of_function_evaluations, number_of_gradient_function_evaluations);
             break
         end
-        phi_derivative = dot(f_grad(x+a*pk),pk);
+        [fgrad, number_of_gradient_function_evaluations] = f_grad(x+a*pk);
+        phi_derivative = dot(fgrad,pk);
         if norm(phi_derivative) <= -c2*phi_derivative0
             break
         elseif phi_derivative >= 0
-            a = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2);
+            [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = zoom(a_prev, a, phi_prev, phi, ck, phi_derivative0, x, f, f_grad, pk, c1, c2, 10, number_of_function_evaluations, number_of_gradient_function_evaluations);
             break
         end
 
@@ -49,7 +51,7 @@ function a = wolfe_strong(f, f_grad, x, pk, a_max, rho = 2, c=[1e-4, 0.9], ck, m
     % fprintf("ENDED Wolfe strong line search a=%f \n\n", a)
 end
 
-function a_star = zoom(a_low, a_hi, phi_low, phi_high, ck, derivative_phi0, x, f, f_grad, pk, c1=1e-4, c2=0.9, max_iters=10)
+function [a_star, number_of_function_evaluations, number_of_gradient_function_evaluations] = zoom(a_low, a_hi, phi_low, phi_high, ck, derivative_phi0, x, f, f_grad, pk, c1=1e-4, c2=0.9, max_iters=10, number_of_function_evaluations, number_of_gradient_function_evaluations)
     % implementation: https://github.com/scipy/scipy/blob/v1.6.3/scipy/optimize/linesearch.py#L193-L335
     assert(a_low < a_hi)
 
@@ -57,19 +59,19 @@ function a_star = zoom(a_low, a_hi, phi_low, phi_high, ck, derivative_phi0, x, f
     delta1 = 0.2;
     delta2 = 0.1;
     % fprintf("STARTED Zoom search\n")
-    derivative_phi_low = f_grad(x+a_low*pk);
+    [derivative_phi_low, number_of_gradient_function_evaluations] = f_grad(x+a_low*pk, number_of_gradient_function_evaluations);
     while iter < max_iters
         dalpha = a_hi - a_low;
 
         # bisection interpolation
         a_j = a_low + 0.5*dalpha;
 
-        phi_j = f(x+a_j*pk);
+        [phi_j, number_of_function_evaluations] = f(x+a_j*pk, number_of_function_evaluations);
         if phi_j > ck + c1*a_j*derivative_phi0 || phi_j >= phi_low
             a_hi = a_j;
             phi_high = phi_j;
         else
-            derivative_phi_j = f_grad(x+a_j*pk);
+            [derivative_phi_j, number_of_gradient_function_evaluations] = f_grad(x+a_j*pk, number_of_gradient_function_evaluations);
             if norm(derivative_phi_j) <=  -c2*derivative_phi0
                 a_star = a_j;
                 break
