@@ -1,4 +1,4 @@
-function [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = bisection_curvature(curvature_condition, f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_count=20, number_of_function_evaluations, number_of_gradient_function_evaluations)
+function [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = bisection_curvature(curvature_condition, f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_count=100, number_of_function_evaluations, number_of_gradient_function_evaluations)
     % Implementation of bisection curvature condition (wolfe and goldstein)
     %
     % Note:
@@ -30,7 +30,7 @@ function [a, number_of_function_evaluations, number_of_gradient_function_evaluat
     end
 
     iter = 0;
-    % fprintf("\nSTARTED WOLFE Step size config...\n")
+    fprintf("\nSTARTED WOLFE Step size config...\n")
     [fgrad, number_of_gradient_function_evaluations] = f_grad(x, number_of_gradient_function_evaluations);
     phi_derivative0 = dot(fgrad, pk);
     [fval, number_of_function_evaluations]  = f(x, number_of_function_evaluations);
@@ -57,13 +57,14 @@ function [a, number_of_function_evaluations, number_of_gradient_function_evaluat
         else
             break
         end
+        fprintf("Iter %d, step size: %0.4e\n", iter, a)
         iter += 1;
         if iter == iter_count
             fprintf("Bisection wolfe weak max iterations count. Couldn't satisfy conditions\n")
             break
         end
     end
-    % fprintf("ENDED WOLFE Step size a=%f \n\n", a)
+    fprintf("ENDED WOLFE Step size a=%0.4e \n\n", a)
 end
 
 function [b, number_of_evaluations] = curvature_condition_weak_wolfe(f_grad, x, pk, a, c, phi0, number_of_evaluations)

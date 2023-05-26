@@ -185,6 +185,12 @@ Knowledge consolidation of math optimization around Quasi-Newton methods via con
         \item Document inexact line/step length search strategies (wolfe, armijo, goldstein) and type of conditions (sufficient, curvature)
         \item Add number of function evaluations and number of gradient of function evaluations as metrics for the simulations
     \end{itemize}
+    \item \textbf{Week 15-25/05/2023:}
+    \begin{itemize}
+        \item Debugging divergence of algorithms (+ why are we getting imaginary numbers?).
+        \item Adjust the initial alpha value to be within boundaries so the value $x+a*pk$ stays within function's domain.
+        \item Add more conclusions about the behaviour of the optimization algorithms.
+    \end{itemize}
 \end{itemize}
  
 \pagebreak
@@ -375,38 +381,38 @@ In this section, we will test well-known optimization techniques with multiple s
 The in-house implementation of the above can be found at the \ref{code}.
 For an example on how to use the functions you can check the \verb|demo.m| and the jupyter notebook.
 
-The line search techniques are based on the simple iterative formula of $x_{k+1} = x_k + a_k*pk$, where $p_k$ is the direction vector and $a_k$ is the step size. For the $pk$, we will study two main schools of thought, the newton method and the steepest descent. On the other hand for the step size, we will study many different approaches such as (\verb|grippo|, \verb|Hanger and Zhang|, \verb|backtracking|, \verb|bisection wolfe weak|, \verb|wolfe strong|, \verb|goldstein|). 
+The line search techniques are based on the simple iterative formula of $x_{k+1} = x_k + a_k pk$, where $p_k$ is the direction vector and $a_k$ is the step size. For the $pk$, we will study two main schools of thought, the newton method and the steepest descent. On the other hand for the step size, we will study many different approaches such as (\verb|grippo|, \verb|Hanger and Zhang|, \verb|backtracking|, \verb|bisection wolfe weak|, \verb|wolfe strong|, \verb|goldstein|). 
 
-Our goal is to find $a_k$ that minimizes the function $\phi (a) = f(x_k + a*pk)$. To find an exact answer is computationally expensive, so usually inexact search strategies are incorporated. Typical step size search algorithms try out a sequence of candidate values for $\alpha$, stopping to
+Our goal is to find $a_k$ that minimizes the function $\phi (a) = f(x_k + a pk)$. To find an exact answer is computationally expensive, so usually inexact search strategies are incorporated. Typical step size search algorithms try out a sequence of candidate values for $\alpha$, stopping to
 accept one of these values when certain conditions are satisfied.
 An effective condition that leads to a decrease of a function while ensuring convergence, is the so called \textbf{sufficient decrease condition}:
 
 \begin{equation}
-f(x_k + a*p_k) \leq f(x_k) + a * c_1 * \nabla f_k^T p_k
+f(x_k + a p_k) \leq f(x_k) + a  c_1 p_k^T \nabla f_k
 \end{equation}
 
-This condition is also called \textbf{Armijo condition}.
+This condition is also called \textbf{Armijo condition}, where $c_1 \in (0,1)$.
 
 The sufficient decrease condition is not enough by itself to ensure that the algorithm
 makes reasonable progress. To rule out unacceptably short steps we introduce a second requirement,
 called the \textbf{curvature condition}, which requires $a_k$ to satisfy:
 
 \begin{equation}
-f(x_k + a*p_k)^T p_k \ge c_2 * \nabla f_k^Tp_k
+c_2 \nabla f_k^Tp_k \le \nabla f(x_k + a p_k)^T p_k
 \end{equation}
 
-The sufficient decrease and curvature conditions are known collectively as the \textbf{Wolfe
+, where $c2 \in (c_1,1)$. The sufficient decrease and curvature conditions are known collectively as the \textbf{Wolfe
 conditions}.
 
 There is also another similar pair of conditions called the \textbf{strong Wolfe} conditions:
 
 \begin{align}
-f(x_k + a*p_k) &\leq f(x_k) + a * c_1 * \nabla f_k^T p_k \\
-|f(x_k + a*p_k)^T p_k| &\ge c_2 * |\nabla f_k^Tp_k|
+f(x_k + a p_k) &\leq f(x_k) + a  c_1 p_k^T \nabla f_k \\
+|\nabla f(x_k + a p_k)^T p_k| &\le c_2  |\nabla f_k^Tp_k|
 \end{align}
 
 The only difference with the Wolfe conditions is that we no longer
-allow the derivative $\nabla f(x_k + a_k * p_k)$ to be too positive. Hence, we exclude points that are far from stationary points of $f(x_k + a_k*p_k)$.
+allow the derivative $\nabla f(x_k + a_k  p_k)$ to be too positive. Hence, we exclude points that are far from stationary points of $f(x_k + a_k p_k)$.
 
 
 Like the Wolfe conditions, the \textbf{Goldstein} conditions ensure that the step length $\alpha$
@@ -414,8 +420,8 @@ achieves sufficient decrease but is not too short. The Goldstein conditions can 
 as a pair of inequalities, in the following way:
 
 \begin{align}
-    f(x_k + a_k*pk) &\leq f(x_k) + a*c*\nabla f_k^T p_k \\
-    f(x_k + a_k*p_k) & \ge f(x_k) + a*(1-c)*\nabla f_k^T p_k
+    f(x_k + a_k pk) &\leq f(x_k) + a_k c \nabla f_k^T p_k \\
+    f(x_k) + a_k (1-c) \nabla f_k^T p_k & \le f(x_k + a_k p_k) 
 \end{align}
 
 , where $0 < c < 1/2$. The first inequality is the sufficient decrease, and similarly with the Wolfe, the second one can be assumed as the curvature condition. A key difference between the Wolfe and the Goldstein conditions is that for the first there are two independent variables to configure $c_1$ and $c_2$, but for the second, only one $c$.
@@ -444,12 +450,12 @@ Test on problem functions 1: Ext; Rosenbrock, 2: Wood, 3: Powell singular, 4: Cu
 \end{itemize}
 
 \begin{align*}
-    rosen(n) &= \sum_{i=1}^{n-1} [100 (x_{i+1}-x_i)^2 + (1-x_i)^2], \\ &\quad x_0 = [-1.2,1,...,-1.2,1], \quad f_{min}(1,1,...,1,1)=0  \\
-    wood(x1,x2,x3,x4) &= 100*(x1^2-x2)^2 + (x1-1)^2 + (x3-1)^2 + 90*(x3^2 - x4)^2 + \\ & 10.1*((x2-1)^2 + (x4-1)^2) + 19.8*(x2-1)*(x4-1)\\ & \quad x_0 [-3,-1,-3,-1], \quad f_{min}(1,1,1,1) = 0 \\
-    powell(x1,x2,x3,x4) &= (x1+10*x2) + 5*(x3-x4)^2 + (x2-2*x3)^4 + 10*(x1-x4)^2 \\ & \quad x_0 = [3,-1.0,1], \quad f_{min}(0,0,0,0) = 0 \\
-    cube(x1,x2) &= 100*(x2-x1^3)^2 + (1-x1)^2 \\ & \quad x_0 = [-1.2,-1], \quad f_{min}(1,1) = -6.4931 \\ 
-    trig(n) &= \sum_{i=1}^{n}[n + i(1-cosx_i) - sinx_i - \sum_{j=1}^{n}cosx_j],\\ & \quad x_0 = [1/5n,...1/5n], \quad f_{min}(0,...,0) = 0 \\
-    helical(x1,x2,x3) &= 100[(x_3-10\theta)^2 + (\sqrt{x_1^2+x_2^2}-1)^2] + x_3^2, \\ & \quad x_0 = [-1,0,0], \quad f_{min}(1,0,0) = 0 \\
+    rosen(n) &= \sum_{i=1}^{n-1} [100 (x_{i+1}-x_i^2)^2 + (1-x_i)^2], \\ &\quad x_0 = [-1.2,1,...,-1.2,1], \quad f_{min}(1,1,...,1,1)=0  \\
+    wood(x_1,x_2,x_3,x_4) &= 100*(x_1^2-x_2)^2 + (x_1-1)^2 + (x_3-1)^2 + 90*(x_3^2 - x_4)^2 + \\ & 10.1*((x_2-1)^2 + (x_4-1)^2) + 19.8*(x_2-1)*(x_4-1)\\ & \quad x_0 [-3,-1,-3,-1], \quad f_{min}(1,1,1,1) = 0 \\
+    powell(x_1,x_2,x_3,x_4) &= (x_1+10*x_2) + 5*(x_3-x_4)^2 + (x_2-2*x_3)^4 + 10*(x_1-x_4)^2 \\ & \quad x_0 = [3,-1.0,1], \quad f_{min}(0,0,0,0) = 0 \\
+    cube(x_1,x_2) &= 100(x_2-x_1^3)^2 + (1-x_1)^2 \\ & \quad x_0 = [-1.2,-1], \quad f_{min}(1,1) = -6.4931 \\ 
+    trig(n) &= \sum_{i=1}^{n}[n + i(1-cosx_i) - sinx_i - \sum_{j=1}^{n}cosx_j]^2,\\ & \quad x_0 = [1/5n,...1/5n], \quad f_{min}(0,...,0) = 0 \\
+    helical(x_1,x_2,x_3) &= 100[(x_3-10\theta)^2 + (\sqrt{x_1^2+x_2^2}-1)^2] + x_3^2, \\ & \quad x_0 = [-1,0,0], \quad f_{min}(1,0,0) = 0 \\
 \end{align*}
 
 For the results, check the \ref{simulation2}.
@@ -461,25 +467,30 @@ For the results, check the \ref{simulation2}.
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 2.2000e+01 & 4.7000e+01 & 6.5000e+01 & 4.2466e-13 & 1.1231e-12 & 7.6759e-24 \\
-        newton & bisection\_wolfe\_weak & 2.2000e+01 & 7.0000e+01 & 9.3000e+01 & 5.9946e-11 & 1.2112e-10 & 3.7455e-21 \\
-        newton & bisection\_goldstein & 2.2000e+01 & 9.4000e+01 & 6.5000e+01 & 4.2466e-13 & 1.1231e-12 & 7.6759e-24 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.4000e+01 & 3.1000e+01 & 4.1000e+01 & 2.8475e-07 & 5.6950e-07 & 8.1081e-14 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.4000e+01 & 4.4000e+01 & 6.0000e+01 & 2.8475e-07 & 5.6950e-07 & 8.1081e-14 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 1.4000e+01 & 6.3000e+01 & 4.1000e+01 & 2.8475e-07 & 5.6950e-07 & 8.1081e-14 \\
-        newton & grippo\_backtracking\_armijo & 1.2000e+01 & 2.6000e+01 & 3.5000e+01 & 2.7241e-09 & 5.4481e-09 & 7.4205e-18 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.2000e+01 & 3.7000e+01 & 5.0000e+01 & 2.7241e-09 & 5.4481e-09 & 7.4205e-18 \\
-        newton & grippo\_bisection\_goldstein & 1.2000e+01 & 5.2000e+01 & 3.5000e+01 & 2.7241e-09 & 5.4481e-09 & 7.4205e-18 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 1.0630e+03 & 2.0000e+02 & 5.5672e-03 & 1.1208e-02 & 3.1171e-05 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.1910e+03 & 1.1910e+03 & 4.1874e-02 & 8.2044e-02 & 1.7537e-03 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 2.1420e+03 & 2.0000e+02 & 5.5672e-03 & 1.1208e-02 & 3.1171e-05 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.0790e+03 & 2.0000e+02 & 3.2414e-01 & 6.9305e-01 & 4.6865e-01 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.2490e+03 & 1.2500e+03 & 3.6626e-01 & 9.9107e-01 & 1.6819e+00 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 2.2150e+03 & 2.0000e+02 & 3.2414e-01 & 6.9305e-01 & 4.6865e-01 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 1.0370e+03 & 2.0000e+02 & 1.9666e-01 & 7.0787e-01 & 7.6496e+00 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.2630e+03 & 1.3140e+03 & 1.4841e+00 & 4.9924e+00 & 5.3890e+00 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 2.2110e+03 & 2.0000e+02 & 1.9666e-01 & 7.0787e-01 & 7.6496e+00 \\
-
+newton & backtracking\_armijo & 22 & 47 & 65 & 4.24660306919122e-13 & 1.12310161171081e-12 & 7.67593985588231e-24 \\
+        newton & wolfe\_strong & 51 & 100 & 3 & 3.11202148495227e-08 & 6.36384759333808e-08 & 1.16392137900027e-15 \\
+        newton & bisection\_wolfe\_weak & 22 & 70 & 93 & 5.99457150585181e-11 & 1.21124443808185e-10 & 3.74552103013306e-21 \\
+        newton & bisection\_goldstein & 22 & 94 & 65 & 4.24660306919122e-13 & 1.12310161171081e-12 & 7.67593985588231e-24 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 14 & 31 & 41 & 2.84747523005002e-07 & 5.69499220337555e-07 & 8.10811536683049e-14 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 14 & 44 & 60 & 2.84747523005002e-07 & 5.69499220337555e-07 & 8.10811536683049e-14 \\
+        newton & hanger\_zhang\_wolfe\_strong & 51 & 99 & 3 & 3.11202148495227e-08 & 6.36384759333808e-08 & 1.16392137900027e-15 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 14 & 63 & 41 & 2.84747523005002e-07 & 5.69499220337555e-07 & 8.10811536683049e-14 \\
+        newton & grippo\_backtracking\_armijo & 12 & 26 & 35 & 2.72405598078507e-09 & 5.44812550629103e-09 & 7.42048100479684e-18 \\
+        newton & grippo\_bisection\_wolfe\_weak & 12 & 37 & 50 & 2.72405598078507e-09 & 5.44812550629103e-09 & 7.42048100479684e-18 \\
+        newton & grippo\_wolfe\_strong & 51 & 99 & 3 & 3.11202148495227e-08 & 6.36384759333808e-08 & 1.16392137900027e-15 \\
+        newton & grippo\_bisection\_goldstein & 12 & 52 & 35 & 2.72405598078507e-09 & 5.44812550629103e-09 & 7.42048100479684e-18 \\
+        steepest & backtracking\_armijo & 500 & 5461 & 1000 & 0.00405416292135397 & 0.00815184029746874 & 1.65095599806295e-05 \\
+        steepest & wolfe\_strong & 500 & 5350 & 1879 & 0.0300579681598293 & 0.0570633835894122 & 0.00136533218669946 \\
+        steepest & bisection\_wolfe\_weak & 500 & 5935 & 5935 & 0.0287331493832927 & 0.0566851213380007 & 0.000825791155540352 \\
+        steepest & bisection\_goldstein & 500 & 10922 & 1000 & 0.00405416292135397 & 0.00815184029746874 & 1.65095599806295e-05 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 5675 & 1000 & 0.23472734818543 & 0.470226795218939 & 0.350215634074376 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 6310 & 6311 & 0.311104956356103 & 0.750437046172376 & 0.195638933287011 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 5263 & 2000 & 0.314048326197008 & 0.632043823210959 & 0.995041070744439 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 11351 & 1000 & 0.23472734818543 & 0.470226795218939 & 0.350215634074376 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 5264 & 1000 & 0.215306188675822 & 0.833536550271171 & 12.7603891154691 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 6588 & 7039 & 1.75378106151133 & 6.75103803591349 & 5.88901289497424 \\
+        steepest & grippo\_wolfe\_strong & 500 & 5407 & 1600 & 1.52775558238082 & 4.13459755973619 & 159.824169217124 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 10979 & 1000 & 0.215306188675822 & 0.833536550271171 & 12.7603891154691 \\
 \end{tabular}}
 \caption{rosen(2)}
 \label{table:rosen(2)}
@@ -489,24 +500,30 @@ newton & backtracking\_armijo & 2.2000e+01 & 4.7000e+01 & 6.5000e+01 & 4.2466e-1
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 3.3000e+01 & 7.0000e+01 & 9.8000e+01 & 1.2212e-15 & 7.4518e-13 & 4.8483e-25 \\ newton & bisection\_wolfe\_weak & 3.3000e+01 & 1.0200e+02 & 1.3600e+02 & 1.2212e-15 & 7.4518e-13 & 4.8483e-25 \\
-        newton & bisection\_goldstein & 3.3000e+01 & 1.4000e+02 & 9.8000e+01 & 1.2212e-15 & 7.4518e-13 & 4.8483e-25 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 2.8000e+01 & 5.3000e+01 & 8.3000e+01 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 2.8000e+01 & 8.0000e+01 & 1.1000e+02 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 2.8000e+01 & 1.0700e+02 & 8.3000e+01 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        newton & grippo\_backtracking\_armijo & 2.8000e+01 & 5.4000e+01 & 8.3000e+01 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        newton & grippo\_bisection\_wolfe\_weak & 2.8000e+01 & 8.1000e+01 & 1.1000e+02 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        newton & grippo\_bisection\_goldstein & 2.8000e+01 & 1.0800e+02 & 8.3000e+01 & 2.0545e-11 & 1.0805e-08 & 3.8779e-17 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 1.0040e+03 & 2.0000e+02 & 1.9474e-01 & 9.9990e-01 & 6.0575e+00 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.0620e+03 & 1.0620e+03 & 2.5768e-01 & 9.9990e-01 & 6.5011e+00 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 2.0080e+03 & 2.0000e+02 & 1.9474e-01 & 9.9990e-01 & 6.0575e+00 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 9.3100e+02 & 2.0000e+02 & 8.0997e-01 & 9.9990e-01 & 9.6455e+01 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.0230e+03 & 1.0240e+03 & 1.0620e+00 & 9.4077e-01 & 1.0713e+02 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 1.8630e+03 & 2.0000e+02 & 8.0997e-01 & 9.9990e-01 & 9.6455e+01 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 9.6800e+02 & 2.0000e+02 & 3.9078e-01 & 1.1128e+00 & 4.8201e+02 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.0820e+03 & 1.1330e+03 & 4.0991e-01 & 1.5287e-01 & 4.2995e+02 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 2.0290e+03 & 2.0000e+02 & 4.2300e-01 & 7.1174e-01 & 1.0949e+03 \\
-
+newton & backtracking\_armijo & 33 & 70 & 98 & 1.22124532708767e-15 & 7.45181694128405e-13 & 4.84829425702435e-25 \\
+        newton & wolfe\_strong & 57 & 112 & 3 & 1.99326337265873 & 0.0116074749287336 & 3.98657911234714 \\
+        newton & bisection\_wolfe\_weak & 33 & 102 & 136 & 1.22124532708767e-15 & 7.45181694128405e-13 & 4.84829425702435e-25 \\
+        newton & bisection\_goldstein & 33 & 140 & 98 & 1.22124532708767e-15 & 7.45181694128405e-13 & 4.84829425702435e-25 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 28 & 53 & 83 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 28 & 80 & 110 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        newton & hanger\_zhang\_wolfe\_strong & 57 & 111 & 3 & 1.99326337265873 & 0.0116074749287336 & 3.98657911234714 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 28 & 107 & 83 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        newton & grippo\_backtracking\_armijo & 28 & 54 & 83 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        newton & grippo\_bisection\_wolfe\_weak & 28 & 81 & 110 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        newton & grippo\_wolfe\_strong & 57 & 105 & 3 & 1.99326337265873 & 0.0116074749287336 & 3.98657911234714 \\
+        newton & grippo\_bisection\_goldstein & 28 & 108 & 83 & 2.05452321822008e-11 & 1.08046921409866e-08 & 3.87790640761083e-17 \\
+        steepest & backtracking\_armijo & 500 & 5519 & 1000 & 0.00825312313406334 & 0.98637623229373 & 1.46242950495646 \\
+        steepest & wolfe\_strong & 500 & 5024 & 2000 & 0.0107731637582776 & 0.996191710149255 & 1.85334611188857 \\
+        steepest & bisection\_wolfe\_weak & 500 & 5942 & 5942 & 0.010206772454277 & 0.995955421443621 & 1.84357300181849 \\
+        steepest & bisection\_goldstein & 500 & 11038 & 1000 & 0.00825312313406334 & 0.98637623229373 & 1.46242950495646 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 4404 & 1000 & 0.964746380583421 & 0.998949846215794 & 19.5357016905797 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 4953 & 4954 & 0.852002828801638 & 1.00486216579194 & 11.5403739859886 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 3953 & 2000 & 0.852002828801638 & 1.00486216579194 & 11.5403739859886 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 8809 & 1000 & 0.964746380583421 & 0.998949846215794 & 19.5357016905797 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 4765 & 1000 & 0.156694202405539 & 0.817782719578344 & 895.188811514486 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 5265 & 5716 & 0.223056841897629 & 1.9383515998147 & 408.959889680481 \\
+        steepest & grippo\_wolfe\_strong & 500 & 4318 & 2000 & 1.30150442734769 & 0.644113748547448 & 187.000442393963 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 9981 & 1000 & 0.156694202405539 & 0.817782719578344 & 895.188811514486 \\
 \end{tabular}}
 \caption{rosen(10)}
 \label{table:rosen(10)}
@@ -516,24 +533,30 @@ newton & backtracking\_armijo & 3.3000e+01 & 7.0000e+01 & 9.8000e+01 & 1.2212e-1
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-        newton & backtracking\_armijo & 3.7000e+01 & 7.5000e+01 & 1.1000e+02 & 1.9933e+00 & 1.2762e-05 & 3.9866e+00 \\
-        newton & bisection\_wolfe\_weak & 3.8000e+01 & 1.1400e+02 & 1.5300e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & bisection\_goldstein & 3.7000e+01 & 1.5000e+02 & 1.1000e+02 & 1.9933e+00 & 1.2762e-05 & 3.9866e+00 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 3.4000e+01 & 6.5000e+01 & 1.0100e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 3.4000e+01 & 9.8000e+01 & 1.3400e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 3.4000e+01 & 1.3100e+02 & 1.0100e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & grippo\_backtracking\_armijo & 3.4000e+01 & 6.6000e+01 & 1.0100e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & grippo\_bisection\_wolfe\_weak & 3.4000e+01 & 9.9000e+01 & 1.3400e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        newton & grippo\_bisection\_goldstein & 3.4000e+01 & 1.3200e+02 & 1.0100e+02 & 1.9933e+00 & 1.2761e-05 & 3.9866e+00 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 9.6200e+02 & 2.0000e+02 & 2.3797e-01 & 9.8979e-01 & 1.6278e+01 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.0310e+03 & 1.0310e+03 & 5.8236e-01 & 9.8979e-01 & 1.7833e+01 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.9260e+03 & 2.0000e+02 & 2.3797e-01 & 9.8979e-01 & 1.6278e+01 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 9.3500e+02 & 2.0000e+02 & 6.9886e-01 & 9.8433e-01 & 5.5623e+01 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.0930e+03 & 1.0940e+03 & 1.1553e+00 & 9.8979e-01 & 3.0893e+02 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 1.8730e+03 & 2.0000e+02 & 6.9886e-01 & 9.8433e-01 & 5.5623e+01 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 1.8730e+03 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.1610e+03 & 1.2120e+03 & 1.3995e+00 & 9.8979e-01 & 3.9996e+02 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 2.1210e+03 & 2.0000e+02 & 9.0662e-01 & 9.8979e-01 & 1.0994e+03 \\
+newton & backtracking\_armijo & 37 & 75 & 110 & 1.99328610095272 & 1.27616560010591e-05 & 3.98662385426169 \\
+        newton & wolfe\_strong & 73 & 144 & 3 & 1.99328610095485 & 1.27605656692342e-05 & 3.9866238542612 \\
+        newton & bisection\_wolfe\_weak & 38 & 114 & 153 & 1.99328610095495 & 1.2760514065735e-05 & 3.9866238542612 \\
+        newton & bisection\_goldstein & 37 & 150 & 110 & 1.99328610095272 & 1.27616560010591e-05 & 3.98662385426169 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 34 & 65 & 101 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 34 & 98 & 134 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        newton & hanger\_zhang\_wolfe\_strong & 73 & 143 & 3 & 1.99328610095485 & 1.27605656692342e-05 & 3.9866238542612 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 34 & 131 & 101 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        newton & grippo\_backtracking\_armijo & 34 & 66 & 101 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        newton & grippo\_bisection\_wolfe\_weak & 34 & 99 & 134 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        newton & grippo\_wolfe\_strong & 73 & 121 & 3 & 1.99328610095485 & 1.27605656692342e-05 & 3.9866238542612 \\
+        newton & grippo\_bisection\_goldstein & 34 & 132 & 101 & 1.99328610095495 & 1.27605144084608e-05 & 3.9866238542612 \\
+        steepest & backtracking\_armijo & 500 & 5458 & 1000 & 0.00873137703012605 & 0.980465841240178 & 11.4755396870366 \\
+        steepest & wolfe\_strong & 500 & 5019 & 2000 & 0.0147750390506268 & 0.989084606184031 & 12.2042583300821 \\
+        steepest & bisection\_wolfe\_weak & 500 & 5832 & 5832 & 0.0143203696842829 & 0.988931546483533 & 12.1529570648515 \\
+        steepest & bisection\_goldstein & 500 & 10916 & 1000 & 0.00873137703012605 & 0.980465841240178 & 11.4755396870366 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 4465 & 1000 & 0.912402057567217 & 0.990851320950918 & 31.6212167798638 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 5209 & 5210 & 0.912873024059725 & 0.989789465693517 & 103.485831889059 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 4209 & 2000 & 0.912873024059725 & 0.989789465693517 & 103.485831889059 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 8931 & 1000 & 0.912402057567217 & 0.990851320950918 & 31.6212167798638 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 5053 & 1000 & 0.239117413042833 & 0.989791576118572 & 600.936604170597 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 5514 & 5965 & 1.36091792710484 & 0.989791576165746 & 1392.31664495257 \\
+        steepest & grippo\_wolfe\_strong & 500 & 4604 & 2000 & 0.0551613732345311 & 0.989791134189679 & 1134.79210579761 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 10557 & 1000 & 0.239117413042833 & 0.989791576118572 & 600.936604170597 \\
 \end{tabular}}
 \caption{rosen(20)}
 \label{table:rosen(20)}
@@ -543,25 +566,30 @@ newton & backtracking\_armijo & 3.3000e+01 & 7.0000e+01 & 9.8000e+01 & 1.2212e-1
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 1.0000e+02 & 1.0370e+03 & 3.0000e+02 & 1.9938e+00 & 2.4474e-03 & 7.8766e+00 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 2.0670e+03 & 2.1670e+03 & 1.9966e+00 & 3.1049e-03 & 7.8765e+00 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 3.9340e+03 & 3.0000e+02 & 1.9966e+00 & 3.1049e-03 & 7.8765e+00 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.4000e+01 & 2.5000e+01 & 4.1000e+01 & 1.9680e+00 & 5.2861e-02 & 7.8770e+00 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 4.1000e+01 & 1.2500e+02 & 1.6800e+02 & 1.5077e-13 & 2.6823e-13 & 2.5258e-25 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 6.4000e+01 & 2.6900e+02 & 1.9100e+02 & 4.4631e-14 & 8.6375e-14 & 7.8206e-27 \\
-        newton & grippo\_backtracking\_armijo & 1.4000e+01 & 2.6000e+01 & 4.1000e+01 & 1.9680e+00 & 5.2861e-02 & 7.8770e+00 \\
-        newton & grippo\_bisection\_wolfe\_weak & 4.2000e+01 & 1.2800e+02 & 1.7100e+02 & 5.2741e-10 & 1.4260e-09 & 3.0334e-17 \\
-        newton & grippo\_bisection\_goldstein & 6.4000e+01 & 2.5600e+02 & 1.9100e+02 & 4.6113e-11 & 9.2736e-11 & 8.2162e-21 \\
-        steepest & backtracking\_armijo & 6.4000e+01 & 2.5600e+02 & 1.9100e+02 & Inf & Inf & Inf \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.2600e+03 & 1.2600e+03 & 3.1452e-01 & 7.2735e-01 & 5.4101e-01 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 2.1500e+03 & 2.0000e+02 & 8.8728e-02 & 1.8530e-01 & 3.1010e-02 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 2.1500e+03 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.3530e+03 & 1.3540e+03 & 3.3035e+00 & 5.5769e+00 & 3.6741e+02 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 2.1810e+03 & 2.0000e+02 & 1.0155e+00 & 1.7091e+00 & 6.0268e+02 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 2.1810e+03 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.2590e+03 & 1.3100e+03 & 6.0506e-01 & 4.2989e+00 & 9.4977e+02 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 2.2670e+03 & 2.0000e+02 & 9.8823e-01 & 1.2430e+00 & 2.9895e+02 \\
-
+newton & backtracking\_armijo & 500 & 26136 & 1500 & 1.99656018458652 & 0.00311063733714945 & 7.87651605713956 \\
+        newton & wolfe\_strong & 78 & 164 & 3 & 2.38379672667932e-08 & 4.92660491291375e-08 & 2.54508086883323e-15 \\
+        newton & bisection\_wolfe\_weak & 500 & 26636 & 27136 & 1.99656018458652 & 0.00311063733714945 & 7.87651605713956 \\
+        newton & bisection\_goldstein & 500 & 52272 & 1500 & 1.99656018458652 & 0.00311063733714945 & 7.87651605713956 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 14 & 25 & 41 & 1.96797404123004 & 0.0528608280569975 & 7.87696716517687 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 41 & 125 & 168 & 1.50768286744096e-13 & 2.68229882749438e-13 & 2.52577379863074e-25 \\
+        newton & hanger\_zhang\_wolfe\_strong & 78 & 163 & 3 & 2.38379672667932e-08 & 4.92660491291375e-08 & 2.54508086883323e-15 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 64 & 269 & 191 & 4.46309655899313e-14 & 8.63753513158372e-14 & 7.8206252659172e-27 \\
+        newton & grippo\_backtracking\_armijo & 14 & 26 & 41 & 1.96797404123004 & 0.0528608280569975 & 7.87696716517687 \\
+        newton & grippo\_bisection\_wolfe\_weak & 42 & 128 & 171 & 5.27407895134502e-10 & 1.42598322039333e-09 & 3.03343522404446e-17 \\
+        newton & grippo\_wolfe\_strong & 78 & 136 & 3 & 2.38379672667932e-08 & 4.92660491291375e-08 & 2.54508086883323e-15 \\
+        newton & grippo\_bisection\_goldstein & 64 & 256 & 191 & 4.61130023055034e-11 & 9.27360410685196e-11 & 8.21621849656104e-21 \\
+        steepest & backtracking\_armijo & 500 & 5320 & 1000 & 0.0106743619242293 & 0.021423126444154 & 0.000413578513530874 \\
+        steepest & wolfe\_strong & 500 & 5664 & 2000 & 0.195449159409715 & 0.426239312759699 & 0.169604662318252 \\
+        steepest & bisection\_wolfe\_weak & 500 & 6224 & 6224 & 0.204163408216843 & 0.449171304915588 & 0.187670319621257 \\
+        steepest & bisection\_goldstein & 500 & 10640 & 1000 & 0.0106743619242293 & 0.021423126444154 & 0.000413578513530874 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 5859 & 1000 & 0.924969749583353 & 1.06001984196593 & 34.1170999922602 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 6859 & 6860 & 3.24632011561635 & 4.39746857206406 & 131.054706457681 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 5714 & 1908 & 0.780350701936058 & 4.59417707584199 & 709.237093878809 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 11719 & 1000 & 0.924969749583353 & 1.06001984196593 & 34.1170999922602 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 5327 & 1000 & 3.01254318245131 & 0.247100054480301 & 1441.21425646283 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 6052 & 6503 & 0.813886388034204 & 3.86959899311585 & 328.34453973712 \\
+        steepest & grippo\_wolfe\_strong & 500 & 6052 & 6503 & inf & inf & inf \\
+        steepest & grippo\_bisection\_goldstein & 500 & 11105 & 1000 & 3.01254318245131 & 0.247100054480301 & 1441.21425646283 \\
 \end{tabular}}
 \caption{wood}
 \label{table:wood}
@@ -571,25 +599,30 @@ newton & backtracking\_armijo & 1.0000e+02 & 1.0370e+03 & 3.0000e+02 & 1.9938e+0
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 1.0000e+02 & 6.9000e+02 & 3.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 5.1100e+02 & 6.1100e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 1.3800e+03 & 3.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.9900e+02 & 3.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 2.9900e+02 & 4.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 4.0710e+03 & 3.0000e+02 & 3.7581e+09 & 7.5162e+09 & 7.8920e+10 \\
-        newton & grippo\_backtracking\_armijo & 1.0000e+02 & 1.4900e+02 & 3.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.4900e+02 & 4.0000e+02 & 1.0143e+00 & 1.7143e-01 & 1.6500e+00 \\
-        newton & grippo\_bisection\_goldstein & 1.0000e+02 & 4.1100e+02 & 3.0000e+02 & 3.7581e+09 & 7.5162e+09 & 7.8920e+10 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 6.9200e+02 & 2.0000e+02 & 1.0190e+01 & 2.2589e+01 & 2.3314e+02 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 8.0300e+02 & 8.0300e+02 & 8.2215e+00 & 1.8652e+01 & 1.9180e+02 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.3840e+03 & 2.0000e+02 & 1.0190e+01 & 2.2589e+01 & 2.3314e+02 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 6.7800e+02 & 2.0000e+02 & 1.4042e+01 & 2.9171e+01 & 2.7433e+02 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 7.8200e+02 & 7.8300e+02 & 1.3461e+01 & 2.9254e+01 & 2.9241e+02 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 1.3570e+03 & 2.0000e+02 & 1.4042e+01 & 2.9171e+01 & 2.7433e+02 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 6.5900e+02 & 2.0000e+02 & 1.7993e+01 & 3.8190e+01 & 1.2522e+02 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 7.7700e+02 & 8.2800e+02 & 1.1856e+01 & 2.6045e+01 & 4.5269e-01 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 1.3690e+03 & 2.0000e+02 & 1.7993e+01 & 3.8190e+01 & 1.2522e+02 \\
-
+newton & backtracking\_armijo & 500 & 3490 & 1500 & 1.01428571428571 & 0.171428571428572 & 1.65 \\
+        newton & wolfe\_strong & 500 & 5560 & 1793 & 1.01428571428578 & 0.171428571428598 & 1.65 \\
+        newton & bisection\_wolfe\_weak & 500 & 2591 & 3091 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & bisection\_goldstein & 500 & 6980 & 1500 & 1.01428571428571 & 0.171428571428572 & 1.65 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 500 & 999 & 1500 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 1499 & 2000 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & hanger\_zhang\_wolfe\_strong & 500 & 5916 & 2 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 500 & 2329 & 1500 & 1.23303571428571 & 0.266071428571429 & 6.24375 \\
+        newton & grippo\_backtracking\_armijo & 500 & 549 & 1500 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & grippo\_bisection\_wolfe\_weak & 500 & 1049 & 2000 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & grippo\_wolfe\_strong & 500 & 5466 & 2 & 1.01428571428571 & 0.171428571428571 & 1.65 \\
+        newton & grippo\_bisection\_goldstein & 500 & 98733 & 1500 & 2.79285779680676 & 3.38571559361352 & 39.000013732942 \\
+        steepest & backtracking\_armijo & 500 & 3492 & 1000 & 47.6902687522096 & 97.5894770145229 & 1020.64126593618 \\
+        steepest & wolfe\_strong & 500 & 3003 & 2000 & 45.7215187522096 & 93.6519770145229 & 979.297515936183 \\
+        steepest & bisection\_wolfe\_weak & 500 & 4003 & 4003 & 45.7215187522096 & 93.6519770145229 & 979.297515936183 \\
+        steepest & bisection\_goldstein & 500 & 6984 & 1000 & 47.6902687522096 & 97.5894770145229 & 1020.64126593618 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 3743 & 1000 & 67.6846916190712 & 134.419112326277 & 1212.15099200376 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 4270 & 4271 & 58.8961981320193 & 118.23927354199 & 664.441584976942 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 3476 & 599 & 55.4348263303232 & 112.10721864483 & 1136.45587589 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 7487 & 1000 & 67.6846916190712 & 134.419112326277 & 1212.15099200376 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 3537 & 1000 & 59.9201997377263 & 120.984117358553 & 1198.64765878393 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 4038 & 4489 & 56.8715286715489 & 114.832343654614 & 1178.91049652521 \\
+        steepest & grippo\_wolfe\_strong & 500 & 3183 & 199 & 50.4864982042237 & 101.455937013495 & 583.498939925393 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 7525 & 1000 & 59.9201997377263 & 120.984117358553 & 1198.64765878393 \\
 \end{tabular}}
 \caption{powell}
 \label{table:powell}
@@ -599,24 +632,30 @@ newton & backtracking\_armijo & 1.0000e+02 & 6.9000e+02 & 3.0000e+02 & 1.0143e+0
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 2.8000e+01 & 6.8000e+01 & 8.3000e+01 & 3.8374e-09 & 1.1526e-08 & 1.4744e-17 \\
-        newton & bisection\_wolfe\_weak & 2.8000e+01 & 9.1000e+01 & 1.2000e+02 & 8.0025e-13 & 2.5078e-12 & 1.7858e-24 \\
-        newton & bisection\_goldstein & 2.8000e+01 & 1.3600e+02 & 8.3000e+01 & 3.8374e-09 & 1.1526e-08 & 1.4744e-17 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 8.0000e+00 & 1.5000e+01 & 2.3000e+01 & 6.8529e-08 & 2.0559e-07 & 4.6962e-15 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+01 & 3.1000e+01 & 4.3000e+01 & 1.3722e-12 & 4.1167e-12 & 1.8830e-24 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 8.0000e+00 & 3.1000e+01 & 2.3000e+01 & 6.8529e-08 & 2.0559e-07 & 4.6962e-15 \\
-        newton & grippo\_backtracking\_armijo & 8.0000e+00 & 1.6000e+01 & 2.3000e+01 & 6.8529e-08 & 2.0559e-07 & 4.6962e-15 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.0000e+01 & 3.2000e+01 & 4.3000e+01 & 1.3722e-12 & 4.1167e-12 & 1.8830e-24 \\
-        newton & grippo\_bisection\_goldstein & 8.0000e+00 & 3.2000e+01 & 2.3000e+01 & 6.8529e-08 & 2.0559e-07 & 4.6962e-15 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 1.0670e+03 & 2.0000e+02 & 2.0755e-01 & 5.0286e-01 & 4.3103e-02 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.4910e+03 & 1.4910e+03 & 6.4017e-01 & 3.4129e+00 & 4.0985e-01 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 2.1380e+03 & 2.0000e+02 & 2.0755e-01 & 5.0286e-01 & 4.3103e-02 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 8.6200e+02 & 2.0000e+02 & 8.5614e-01 & 5.1894e-01 & 2.3590e+01 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 9.6300e+02 & 9.6400e+02 & 8.5229e-01 & 6.6320e-01 & 1.1854e+01 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 1.7270e+03 & 2.0000e+02 & 8.5614e-01 & 5.1894e-01 & 2.3590e+01 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 8.1000e+02 & 2.0000e+02 & 9.5381e-01 & 8.3739e-01 & 3.3847e+02 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 9.1100e+02 & 9.6200e+02 & 9.4090e-01 & 8.3148e-01 & 3.3624e+02 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 1.6730e+03 & 2.0000e+02 & 9.5381e-01 & 8.3739e-01 & 3.3847e+02 \\
+newton & backtracking\_armijo & 28 & 68 & 83 & 3.83735021536324e-09 & 1.1525625787101e-08 & 1.4743685120696e-17 \\
+        newton & wolfe\_strong & 62 & 122 & 3 & 3.60959064860111e-08 & 1.09911187706757e-07 & 1.56648064219806e-15 \\
+        newton & bisection\_wolfe\_weak & 28 & 91 & 120 & 8.00248756149813e-13 & 2.5077717680233e-12 & 1.78584382762286e-24 \\
+        newton & bisection\_goldstein & 28 & 136 & 83 & 3.83735021536324e-09 & 1.1525625787101e-08 & 1.4743685120696e-17 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 8 & 15 & 23 & 6.85290265645122e-08 & 2.05587075585711e-07 & 4.6962274818896e-15 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 10 & 31 & 43 & 1.37223565843669e-12 & 4.11670697531008e-12 & 1.88303070228519e-24 \\
+        newton & hanger\_zhang\_wolfe\_strong & 62 & 121 & 3 & 3.60959064860111e-08 & 1.09911187706757e-07 & 1.56648064219806e-15 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 8 & 31 & 23 & 6.85290265645122e-08 & 2.05587075585711e-07 & 4.6962274818896e-15 \\
+        newton & grippo\_backtracking\_armijo & 8 & 16 & 23 & 6.85290265645122e-08 & 2.05587075585711e-07 & 4.6962274818896e-15 \\
+        newton & grippo\_bisection\_wolfe\_weak & 10 & 32 & 43 & 1.37223565843669e-12 & 4.11670697531008e-12 & 1.88303070228519e-24 \\
+        newton & grippo\_wolfe\_strong & 62 & 110 & 3 & 3.60959064860111e-08 & 1.09911187706757e-07 & 1.56648064219806e-15 \\
+        newton & grippo\_bisection\_goldstein & 8 & 32 & 23 & 6.85290265645122e-08 & 2.05587075585711e-07 & 4.6962274818896e-15 \\
+        steepest & backtracking\_armijo & 500 & 5493 & 1000 & 0.0996375633293691 & 0.270354316756821 & 0.00993318499321469 \\
+        steepest & wolfe\_strong & 500 & 5416 & 1825 & 0.136398530779182 & 0.356277307788242 & 0.0186173583136064 \\
+        steepest & bisection\_wolfe\_weak & 500 & 7739 & 7739 & 0.638858537607128 & 3.40237072953039 & 0.408179990697125 \\
+        steepest & bisection\_goldstein & 500 & 10986 & 1000 & 0.0996375633293691 & 0.270354316756821 & 0.00993318499321469 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 4309 & 1000 & 0.761007494030816 & 0.866707398756144 & 2.01055241845332 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 4804 & 4805 & 0.772889769722317 & 0.881541965662279 & 1.7367846766417 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 3804 & 2000 & 0.772889769722317 & 0.881541965662279 & 1.7367846766417 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 8619 & 1000 & 0.761007494030816 & 0.866707398756144 & 2.01055241845332 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 3838 & 1000 & 0.95182681845043 & 0.775062498308522 & 315.950974793861 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 4338 & 4789 & 0.943017327672101 & 0.726138241011933 & 298.780732356955 \\
+        steepest & grippo\_wolfe\_strong & 500 & 3338 & 2000 & 0.943017327672101 & 0.726138241011933 & 298.780732356955 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 8127 & 1000 & 0.95182681845043 & 0.775062498308522 & 315.950974793861 \\
 
 \end{tabular}}
 \caption{cube}
@@ -627,24 +666,30 @@ newton & backtracking\_armijo & 2.8000e+01 & 6.8000e+01 & 8.3000e+01 & 3.8374e-0
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & backtracking\_armijo & 1.0000e+02 & 1.0970e+03 & 3.0000e+02 & 1.4000e-02 & 1.7065e-03 & 7.5919e+02 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 2.1870e+03 & 2.2870e+03 & 1.0591e-02 & 8.2693e-03 & 7.5886e+02 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 4.1740e+03 & 3.0000e+02 & 1.0591e-02 & 8.2693e-03 & 7.5886e+02 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.0880e+03 & 3.0000e+02 & 1.8372e-02 & 1.4497e-02 & 7.5955e+02 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 2.1860e+03 & 2.2870e+03 & 1.5556e-02 & 6.2685e-03 & 7.5933e+02 \\
-        newton & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 4.1170e+03 & 3.0000e+02 & 1.5470e-02 & 6.0151e-03 & 7.5932e+02 \\
-        newton & grippo\_backtracking\_armijo & 1.0000e+02 & 1.0340e+03 & 3.0000e+02 & 2.3927e-02 & 3.0742e-02 & 7.5993e+02 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.1360e+03 & 2.2870e+03 & 2.1500e-02 & 2.3672e-02 & 7.5979e+02 \\
-        newton & grippo\_bisection\_goldstein & 1.0000e+02 & 4.1230e+03 & 3.0000e+02 & 2.3430e-02 & 2.9322e-02 & 7.5992e+02 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 5.2600e+02 & 2.0000e+02 & 4.7583e-02 & 3.0419e+00 & 4.1534e+02 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 6.2200e+02 & 6.2200e+02 & 1.8802e+01 & 3.2413e+00 & 4.1534e+02 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.0540e+03 & 2.0000e+02 & 1.2614e+01 & 9.3251e+00 & 4.1534e+02 \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 4.7700e+02 & 2.0000e+02 & 7.4804e+00 & 3.0419e+00 & 4.3875e+02 \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 4.2700e+02 & 4.2800e+02 & 1.9952e+01 & 3.0265e+00 & 4.9247e+02 \\
-        steepest & hanger\_zhang\_bisection\_goldstein & 1.0000e+02 & 9.7300e+02 & 2.0000e+02 & 1.7652e+01 & 9.3251e+00 & 4.3880e+02 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 1.7200e+02 & 2.0000e+02 & 5.4810e+01 & 2.9550e+01 & 5.6683e+02 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.5100e+02 & 3.0200e+02 & 9.1757e+01 & 1.2248e-01 & 6.4404e+02 \\
-        steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 4.0300e+02 & 2.0000e+02 & 2.7364e+01 & 1.4771e+00 & 6.2671e+02 \\
+newton & backtracking\_armijo & 5 & 10 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        newton & wolfe\_strong & 17 & 42 & 3 & 1.47602909288576e-07 & 2.02222908794938e-08 & 1.4804031919586e-13 \\
+        newton & bisection\_wolfe\_weak & 6 & 16 & 23 & 1.26827201005438e-10 & 1.58022604556525e-10 & 3.84151128897762e-17 \\
+        newton & bisection\_goldstein & 5 & 20 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 5 & 9 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 6 & 15 & 23 & 1.26827201005438e-10 & 1.58022604556525e-10 & 3.84151128897762e-17 \\
+        newton & hanger\_zhang\_wolfe\_strong & 17 & 41 & 3 & 1.47602909288576e-07 & 2.02222908794938e-08 & 1.4804031919586e-13 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 5 & 19 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        newton & grippo\_backtracking\_armijo & 5 & 10 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        newton & grippo\_bisection\_wolfe\_weak & 6 & 16 & 23 & 1.26827201005438e-10 & 1.58022604556525e-10 & 3.84151128897762e-17 \\
+        newton & grippo\_wolfe\_strong & 17 & 42 & 3 & 1.47602909288576e-07 & 2.02222908794938e-08 & 1.4804031919586e-13 \\
+        newton & grippo\_bisection\_goldstein & 5 & 20 & 14 & 1.29269624139599e-10 & 7.94696135359555e-10 & 6.17330697603825e-18 \\
+        steepest & backtracking\_armijo & 5 & 11 & 9 & 1.02585080717437e-11 & 4.94425569897992e-11 & 3.30101000326637e-20 \\
+        steepest & wolfe\_strong & 6 & 10 & 2 & 2.03694279259002e-13 & 3.88996945554449e-13 & 5.76650379740594e-23 \\
+        steepest & bisection\_wolfe\_weak & 6 & 18 & 19 & 9.80974166036125e-12 & 4.7186354935882e-11 & 3.01386032595429e-20 \\
+        steepest & bisection\_goldstein & 5 & 22 & 9 & 1.02585080717437e-11 & 4.94425569897992e-11 & 3.30101000326637e-20 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 999 & 1000 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 1499 & 1500 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 6 & 9 & 2 & 2.03694279259002e-13 & 3.88996945554449e-13 & 5.76650379740594e-23 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 1999 & 1000 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 549 & 1000 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 1049 & 1500 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
+        steepest & grippo\_wolfe\_strong & 6 & 10 & 2 & 2.03694279259002e-13 & 3.88996945554449e-13 & 5.76650379740594e-23 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 1549 & 1000 & 0.00430258295957006 & 0.000252295609388123 & 2.38607229049697e-05 \\
 
 \end{tabular}}
 \caption{trig(20)}
@@ -674,7 +719,7 @@ newton & backtracking\_armijo & 1.0000e+02 & 1.0980e+03 & 3.0000e+02 & 4.6300e-0
         steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.5100e+02 & 3.0200e+02 & 5.2438e+02 & 1.9875e+02 & 5.5293e+03 \\
         steepest & grippo\_bisection\_goldstein & 1.0000e+02 & 7.0100e+02 & 2.0000e+02 & 7.4617e+01 & 2.6312e+02 & 5.4972e+03 \\
 \end{tabular}}
-\caption{trig(60)}
+\caption{trig(60) needs update}
 \label{table:trig(60)}
 \end{table}
 
@@ -685,13 +730,14 @@ newton & backtracking\_armijo & 1.0000e+02 & 1.0980e+03 & 3.0000e+02 & 4.6300e-0
 Program the steepest descent and Newton algorithms using the a) backtracking line search with armijo or b) wolfe weak condition. c) the wolfe strong condition and d) without any condition. Use them to minimize the following functions:
 
 \begin{align*}
-    f_1(x,y) &= 100 (y-x)^2 + (1-x)^2, \\ &\quad [x_0,y_0] = [-1.8,-1.8], \quad f_{min}(1,1)=0  \\
+    f_1(x,y) &= 100 (y-x^2)^2 + (1-x)^2, \\ &\quad [x_0,y_0] = [-1.8,-1.8], \quad f_{min}(1,1)=0  \\
     f_2(x,y) &= x^2 + 4y^2 + 2xy, \\ & \quad [x_0,y_0] [-3,-3], \quad f_{min}(0,0) = 0 \\
     f_3(x,y) &= (x+2y-7)^2 + (2x+y-5)^2, \\ & \quad [x_0,y_0] = [-9.5,9.5], \quad f_{min}(1,3) = 0 \\
     f_4(x,y) &= 5x^4 + 6y^4 - 6x^2 + 2xy + 5y^2 + 15x -7y + 13, \\ & \quad [x_0,y_0] = [1.9,-1.9], \quad f_{min}(-1.1515,0.5455) = -6.4931 \\ 
     f_5(x,y) &= (x^2)^{y^2+1} + (y^2)^{x^2+1},\\ & \quad [x_0,y_0] = [-1.5,1.25], \quad f_{min}(0,0) = 0 \\
     f_6(x,y,z) &= x^2 + y^3 - (z^4)^2 + (2xyz)^2 + (2xy-3yz+xz)^2, \\ & \quad [x_0,y_0,z_0] = [10,10,10], \quad f_{min}(0.0048605831,0.0016994507,X) = 0 \\
-    f_7(x,y,z,k) &= (x-1)^2 + (x-\sqrt{y})^2 + (y-\sqrt{z})^2 + (z-\sqrt{k})^2, \\ & \quad [x_0,y_0,z_0,k_0] = [0.1,0.1,0.1,0.1], \quad f_{min}(0.999993,0.999983,0.999964,0.999912) = 1.13719^{-10} \\
+    f_7(x,y,z) &= x^2 + (y + y^2) + (-1 + e^z)^2, \\ & \quad [x_0,y_0,z_0] = [2,3,-8], \quad f_{min}(3.02442e-08,-1,2.40687e-08) = 0 \\
+    f_8(x,y,z,k) &= (x-1)^2 + (x-\sqrt{y})^2 + (y-\sqrt{z})^2 + (z-\sqrt{k})^2, \\ & \quad [x_0,y_0,z_0,k_0] = [0.1,0.1,0.1,0.1], \quad f_{min}(0.999993,0.999983,0.999964,0.999912) = 1.13719^{-10} \\
 \end{align*}
 
 For the analysis we have created the tables under \ref{simulation1}. For the plots you can check \ref{plots}.
@@ -708,29 +754,32 @@ For the analysis we have created the tables under \ref{simulation1}. For the plo
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-        newton & none & 6.0000e+00 & 5.0000e+00 & 1.2000e+01 & 1.0658e-14 & 2.1316e-14 & 1.1360e-28 \\
-        newton & backtracking\_armijo & 2.5000e+01 & 5.6000e+01 & 7.4000e+01 & 1.8338e-11 & 4.2331e-11 & 3.5332e-21 \\
-        newton & wolfe\_strong & 5.8000e+01 & 1.1400e+02 & 3.0000e+00 & 4.5299e-08 & 9.2633e-08 & 2.4661e-15 \\
-        newton & bisection\_wolfe\_weak & 2.5000e+01 & 8.0000e+01 & 1.0600e+02 & 1.8338e-11 & 4.2331e-11 & 3.5332e-21 \\
-        newton & bisection\_goldstein & 2.5000e+01 & 1.1200e+02 & 7.4000e+01 & 1.8338e-11 & 4.2331e-11 & 3.5332e-21 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 8.0000e+00 & 1.4000e+01 & 2.3000e+01 & 1.5810e-13 & 3.1608e-13 & 2.4996e-26 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 8.0000e+00 & 2.1000e+01 & 3.1000e+01 & 1.5810e-13 & 3.1608e-13 & 2.4996e-26 \\
-        newton & hanger\_zhang\_wolfe\_strong & 5.8000e+01 & 1.1300e+02 & 3.0000e+00 & 4.5299e-08 & 9.2633e-08 & 2.4661e-15 \\
-        newton & grippo\_backtracking\_armijo & 8.0000e+00 & 1.5000e+01 & 2.3000e+01 & 1.5810e-13 & 3.1608e-13 & 2.4996e-26 \\
-        newton & grippo\_bisection\_wolfe\_weak & 8.0000e+00 & 2.2000e+01 & 3.1000e+01 & 1.5810e-13 & 3.1608e-13 & 2.4996e-26 \\
-        newton & grippo\_wolfe\_strong & 5.8000e+01 & 1.0600e+02 & 3.0000e+00 & 4.5299e-08 & 9.2633e-08 & 2.4661e-15 \\
-        steepest & none & 5.8000e+01 & 1.0600e+02 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & backtracking\_armijo & 5.8000e+01 & 1.0600e+02 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & wolfe\_strong & 1.0000e+02 & 9.9700e+02 & 4.0000e+02 & 3.1740e-01 & 5.3631e-01 & 1.0125e-01 \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.0890e+03 & 1.0890e+03 & 3.1697e-01 & 5.3546e-01 & 1.0086e-01 \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.0890e+03 & 1.0890e+03 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.0890e+03 & 1.0890e+03 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.3340e+03 & 1.3350e+03 & 1.4223e+00 & 5.2656e+00 & 1.7873e+01 \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 1.1190e+03 & 3.6800e+02 & 3.9504e-01 & 7.0026e+00 & 3.6682e+03 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 1.1190e+03 & 3.6800e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.3730e+03 & 1.4240e+03 & 5.2206e+00 & 1.5428e+01 & 2.1931e+02 \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 1.3730e+03 & 1.4240e+03 & Inf & Inf & Inf \\
-
+newton & none & 6 & 5 & 12 & 1.06581410364015e-14 & 2.1316282072803e-14 & 1.13595970351826e-28 \\
+        newton & backtracking\_armijo & 25 & 56 & 74 & 1.83383308538509e-11 & 4.23308055275129e-11 & 3.53322861201599e-21 \\
+        newton & wolfe\_strong & 58 & 114 & 3 & 4.52991318899976e-08 & 9.26332838213639e-08 & 2.46614282022246e-15 \\
+        newton & bisection\_wolfe\_weak & 25 & 80 & 106 & 1.83383308538509e-11 & 4.23308055275129e-11 & 3.53322861201599e-21 \\
+        newton & bisection\_goldstein & 25 & 112 & 74 & 1.83383308538509e-11 & 4.23308055275129e-11 & 3.53322861201599e-21 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 8 & 14 & 23 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 8 & 21 & 31 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        newton & hanger\_zhang\_wolfe\_strong & 58 & 113 & 3 & 4.52991318899976e-08 & 9.26332838213639e-08 & 2.46614282022246e-15 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 8 & 29 & 23 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        newton & grippo\_backtracking\_armijo & 8 & 15 & 23 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        newton & grippo\_bisection\_wolfe\_weak & 8 & 22 & 31 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        newton & grippo\_wolfe\_strong & 58 & 106 & 3 & 4.52991318899976e-08 & 9.26332838213639e-08 & 2.46614282022246e-15 \\
+        newton & grippo\_bisection\_goldstein & 8 & 30 & 23 & 1.58095758706622e-13 & 3.16080495110782e-13 & 2.49955015161869e-26 \\
+        steepest & none & 8 & 30 & 23 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 500 & 5173 & 1000 & 0.0764923559796139 & 0.147605686863235 & 0.00587336415595809 \\
+        steepest & wolfe\_strong & 500 & 5625 & 2000 & 0.142434832257786 & 0.26634616317055 & 0.0205989145811623 \\
+        steepest & bisection\_wolfe\_weak & 500 & 5618 & 5618 & 0.136648890448104 & 0.255995533436768 & 0.0188607933793742 \\
+        steepest & bisection\_goldstein & 500 & 10346 & 1000 & 0.0764923559796139 & 0.147605686863235 & 0.00587336415595809 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 6236 & 1000 & 1.07217065657802 & 3.09215861286292 & 5.2191547978386 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 7241 & 7242 & 4.51360383769886 & 11.8235264601893 & 43.2319701648045 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 5679 & 1856 & 3.79768036559384 & 6.1847401374526 & 55.674131047754 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 12473 & 1000 & 1.07217065657802 & 3.09215861286292 & 5.2191547978386 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 6239 & 1000 & 1.76466390201272 & 9.68039119255326 & 925.465942415539 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 7321 & 7772 & 4.33286526772669 & 26.5722185403907 & 93.9831024832118 \\
+        steepest & grippo\_wolfe\_strong & 500 & 7321 & 7772 & inf & inf & inf \\
+        steepest & grippo\_bisection\_goldstein & 500 & 12929 & 1000 & 1.76466390201272 & 9.68039119255326 & 925.465942415539 \\
 \end{tabular}}
 \caption{f1}
 \label{table:f1}
@@ -740,28 +789,33 @@ For the analysis we have created the tables under \ref{simulation1}. For the plo
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 2.0000e+00 & 1.0000e+00 & 2.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & backtracking\_armijo & 2.0000e+00 & 2.0000e+00 & 3.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & wolfe\_strong & 2.6000e+01 & 5.0000e+01 & 2.0000e+00 & 8.9407e-08 & 8.9407e-08 & 5.5955e-14 \\
-        newton & bisection\_wolfe\_weak & 2.0000e+00 & 3.0000e+00 & 4.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & bisection\_goldstein & 2.0000e+00 & 4.0000e+00 & 3.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 2.0000e+00 & 1.0000e+00 & 3.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 2.0000e+00 & 2.0000e+00 & 4.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & hanger\_zhang\_wolfe\_strong & 2.6000e+01 & 4.9000e+01 & 2.0000e+00 & 8.9407e-08 & 8.9407e-08 & 5.5955e-14 \\
-        newton & grippo\_backtracking\_armijo & 2.0000e+00 & 2.0000e+00 & 3.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & grippo\_bisection\_wolfe\_weak & 2.0000e+00 & 3.0000e+00 & 4.0000e+00 & 1.3323e-15 & 8.8818e-16 & 2.5638e-30 \\
-        newton & grippo\_wolfe\_strong & 2.6000e+01 & 5.0000e+01 & 2.0000e+00 & 8.9407e-08 & 8.9407e-08 & 5.5955e-14 \\
-        steepest & none & 1.0000e+02 & 1.0000e+02 & 1.0000e+02 & 1.4063e+88 & 4.6448e+88 & 1.0134e+178 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 5.5100e+02 & 2.0000e+02 & 4.3665e+207 & 1.4422e+208 & Inf \\
-        steepest & wolfe\_strong & 2.5000e+01 & 1.4600e+02 & 6.0000e+00 & 5.3745e-07 & 1.1669e-07 & 2.1789e-13 \\
-        steepest & bisection\_wolfe\_weak & 2.5000e+01 & 1.2200e+02 & 1.2300e+02 & 5.3644e-07 & 1.3411e-07 & 2.1583e-13 \\
-        steepest & bisection\_goldstein & 2.5000e+01 & 1.2200e+02 & 1.2300e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 5.5000e+02 & 2.0000e+02 & 4.3665e+207 & 1.4422e+208 & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 4.8000e+02 & 4.8100e+02 & 1.8811e-01 & 6.2127e-01 & 1.8130e+00 \\
-        steepest & hanger\_zhang\_wolfe\_strong & 2.9000e+01 & 1.5100e+02 & 2.0000e+00 & 3.0971e-07 & 7.6281e-08 & 7.1947e-14 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 5.0000e+02 & 2.0000e+02 & 4.3665e+207 & 1.4422e+208 & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 4.3200e+02 & 4.8300e+02 & 9.9748e-01 & 3.2945e+00 & 5.0981e+01 \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 2.5500e+02 & 3.0000e+00 & 1.1594e-01 & 3.8291e-01 & 6.8871e-01 \\
+newton & none & 2 & 1 & 2 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & backtracking\_armijo & 2 & 2 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & wolfe\_strong & 26 & 50 & 2 & 8.94069671630872e-08 & 8.9406967163085e-08 & 5.59552404411075e-14 \\
+        newton & bisection\_wolfe\_weak & 2 & 3 & 4 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & bisection\_goldstein & 2 & 4 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 2 & 1 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 2 & 2 & 4 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & hanger\_zhang\_wolfe\_strong & 26 & 49 & 2 & 8.94069671630872e-08 & 8.9406967163085e-08 & 5.59552404411075e-14 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 2 & 3 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & grippo\_backtracking\_armijo & 2 & 2 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & grippo\_bisection\_wolfe\_weak & 2 & 3 & 4 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        newton & grippo\_wolfe\_strong & 26 & 50 & 2 & 8.94069671630872e-08 & 8.9406967163085e-08 & 5.59552404411075e-14 \\
+        newton & grippo\_bisection\_goldstein & 2 & 4 & 3 & 1.33226762955019e-15 & 8.88178419700125e-16 & 2.56379794196829e-30 \\
+        steepest & none & 2 & 4 & 3 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 25 & 98 & 49 & 5.36441802978516e-07 & 1.34110450744629e-07 & 2.1582735598713e-13 \\
+        steepest & wolfe\_strong & 25 & 146 & 6 & 5.37448574142697e-07 & 1.16687415396319e-07 & 2.17887811445214e-13 \\
+        steepest & bisection\_wolfe\_weak & 25 & 122 & 123 & 5.36441802978516e-07 & 1.34110450744629e-07 & 2.1582735598713e-13 \\
+        steepest & bisection\_goldstein & 25 & 196 & 49 & 5.36441802978516e-07 & 1.34110450744629e-07 & 2.1582735598713e-13 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 1911 & 1000 & 0.0585721762878575 & 0.193450756892479 & 0.17578514487564 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 2412 & 2413 & 0.134878580604622 & 0.445473690072815 & 0.932149183721729 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 29 & 151 & 2 & 3.09713243581247e-07 & 7.62812200898387e-08 & 7.19469832064766e-14 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 3823 & 1000 & 0.0585721762878575 & 0.193450756892479 & 0.17578514487564 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 1464 & 1000 & 0.715230851282061 & 2.36224703096871 & 26.2115032217041 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 1964 & 2415 & 0.715230851282058 & 2.3622470309687 & 26.2115032217039 \\
+        steepest & grippo\_wolfe\_strong & 500 & 1075 & 27 & 0.812187709090758 & 2.68247377885032 & 33.799655637957 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 3379 & 1000 & 0.715230851282061 & 2.36224703096871 & 26.2115032217041 \\
+
 
 \end{tabular}}
 \caption{f2}
@@ -772,28 +826,33 @@ newton & none & 2.0000e+00 & 1.0000e+00 & 2.0000e+00 & 1.3323e-15 & 8.8818e-16 &
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 2.0000e+00 & 1.0000e+00 & 2.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & backtracking\_armijo & 2.0000e+00 & 2.0000e+00 & 3.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & wolfe\_strong & 3.0000e+01 & 5.8000e+01 & 2.0000e+00 & 1.9558e-08 & 2.3283e-08 & 8.2660e-15 \\
-        newton & bisection\_wolfe\_weak & 2.0000e+00 & 3.0000e+00 & 4.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & bisection\_goldstein & 2.0000e+00 & 4.0000e+00 & 3.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 2.0000e+00 & 1.0000e+00 & 3.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 2.0000e+00 & 2.0000e+00 & 4.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & hanger\_zhang\_wolfe\_strong & 3.0000e+01 & 5.7000e+01 & 2.0000e+00 & 1.9558e-08 & 2.3283e-08 & 8.2660e-15 \\
-        newton & grippo\_backtracking\_armijo & 2.0000e+00 & 2.0000e+00 & 3.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & grippo\_bisection\_wolfe\_weak & 2.0000e+00 & 3.0000e+00 & 4.0000e+00 & 0.0000e+00 & 1.7764e-15 & 1.5777e-29 \\
-        newton & grippo\_wolfe\_strong & 3.0000e+01 & 5.8000e+01 & 2.0000e+00 & 1.9558e-08 & 2.3283e-08 & 8.2660e-15 \\
-        steepest & none & 1.0000e+02 & 1.0000e+02 & 1.0000e+02 & 1.2752e+124 & 1.2752e+124 & 2.9272e+249 \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 5.2400e+02 & 2.0000e+02 & 2.3399e+233 & 2.3399e+233 & Inf \\
-        steepest & wolfe\_strong & 3.2000e+01 & 2.9700e+02 & 8.0000e+00 & 3.7815e-08 & 3.7815e-08 & 2.5740e-14 \\
-        steepest & bisection\_wolfe\_weak & 4.1000e+01 & 2.4300e+02 & 2.4400e+02 & 1.6358e-07 & 1.8294e-07 & 6.1723e-14 \\
-        steepest & bisection\_goldstein & 4.1000e+01 & 2.4300e+02 & 2.4400e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 5.2300e+02 & 2.0000e+02 & 2.3399e+233 & 2.3399e+233 & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 5.6000e+02 & 5.6100e+02 & 2.6823e+00 & 2.6823e+00 & 1.2951e+02 \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 3.9900e+02 & 1.5000e+01 & 1.7689e+00 & 1.7689e+00 & 5.6322e+01 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 4.7300e+02 & 2.0000e+02 & 2.3399e+233 & 2.3399e+233 & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 4.9900e+02 & 5.5000e+02 & 1.1500e+01 & 1.1500e+01 & 2.3805e+03 \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 3.4900e+02 & 1.1000e+01 & 6.3175e+00 & 6.3175e+00 & 7.1839e+02 \\
+newton & none & 2 & 1 & 2 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & backtracking\_armijo & 2 & 2 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & wolfe\_strong & 30 & 58 & 2 & 1.95577742889697e-08 & 2.32830639212978e-08 & 8.26595724556984e-15 \\
+        newton & bisection\_wolfe\_weak & 2 & 3 & 4 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & bisection\_goldstein & 2 & 4 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 2 & 1 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 2 & 2 & 4 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & hanger\_zhang\_wolfe\_strong & 30 & 57 & 2 & 1.95577742889697e-08 & 2.32830639212978e-08 & 8.26595724556984e-15 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 2 & 3 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & grippo\_backtracking\_armijo & 2 & 2 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & grippo\_bisection\_wolfe\_weak & 2 & 3 & 4 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        newton & grippo\_wolfe\_strong & 30 & 58 & 2 & 1.95577742889697e-08 & 2.32830639212978e-08 & 8.26595724556984e-15 \\
+        newton & grippo\_bisection\_goldstein & 2 & 4 & 3 & 0 & 1.77635683940025e-15 & 1.57772181044202e-29 \\
+        steepest & none & 2 & 4 & 3 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 13 & 69 & 25 & 1.0710209608078e-08 & 1.0710209608078e-08 & 2.06475461728139e-15 \\
+        steepest & wolfe\_strong & 32 & 297 & 8 & 3.78152591462566e-08 & 3.78152593683012e-08 & 2.57398889381339e-14 \\
+        steepest & bisection\_wolfe\_weak & 41 & 243 & 244 & 1.63575360367929e-07 & 1.82938372450536e-07 & 6.172305171008e-14 \\
+        steepest & bisection\_goldstein & 13 & 138 & 25 & 1.0710209608078e-08 & 1.0710209608078e-08 & 2.06475461728139e-15 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 2267 & 1000 & 1.33882113422614 & 1.33882113422614 & 32.2639565301103 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 2769 & 2770 & 0.209190802222834 & 0.209190802222833 & 0.787694251223387 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 1999 & 3 & 0.575343439336832 & 0.575343439336832 & 5.95836131738284 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 4535 & 1000 & 1.33882113422614 & 1.33882113422614 & 32.2639565301103 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 1803 & 1000 & 1.22833251953125 & 1.22833251953125 & 27.1584140136838 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 2299 & 2750 & 11.5 & 11.5 & 2380.5 \\
+        steepest & grippo\_wolfe\_strong & 500 & 1549 & 11 & 7.33856427725536 & 7.33856427725536 & 969.381461725353 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 4057 & 1000 & 1.22833251953125 & 1.22833251953125 & 27.1584140136838 \\
+
 
 \end{tabular}}
 \caption{f3}
@@ -804,29 +863,32 @@ newton & none & 2.0000e+00 & 1.0000e+00 & 2.0000e+00 & 0.0000e+00 & 1.7764e-15 &
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 3.0000e+01 & 2.9000e+01 & 6.0000e+01 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & backtracking\_armijo & 8.8000e+01 & 8.7800e+02 & 2.6300e+02 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & wolfe\_strong & 3.2000e+01 & 8.1000e+01 & 3.0000e+00 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 2.1430e+03 & 2.2430e+03 & 1.4023e+00 & 7.4935e-01 & 2.4441e+01 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 4.0860e+03 & 3.0000e+02 & 1.4023e+00 & 7.4935e-01 & 2.4441e+01 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 5.1000e+01 & 1.2500e+02 & 1.5200e+02 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.3000e+01 & 3.6000e+01 & 5.1000e+01 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & hanger\_zhang\_wolfe\_strong & 3.2000e+01 & 8.0000e+01 & 3.0000e+00 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & grippo\_backtracking\_armijo & 3.2000e+01 & 6.7000e+01 & 9.5000e+01 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.3000e+01 & 3.7000e+01 & 5.1000e+01 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        newton & grippo\_wolfe\_strong & 3.2000e+01 & 8.1000e+01 & 3.0000e+00 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        steepest & none & 3.2000e+01 & 8.1000e+01 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & backtracking\_armijo & 3.2000e+01 & 8.1000e+01 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & wolfe\_strong & 1.5000e+01 & 1.1500e+02 & 6.1000e+01 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        steepest & bisection\_wolfe\_weak & 1.7000e+01 & 1.3200e+02 & 1.3300e+02 & 9.4451e-03 & 2.1275e-03 & 3.0189e-03 \\
-        steepest & bisection\_goldstein & 1.7000e+01 & 1.3200e+02 & 1.3300e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.7000e+01 & 1.3200e+02 & 1.3300e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 7.2800e+02 & 7.2900e+02 & 1.3054e-01 & 1.6635e-02 & 7.1801e-01 \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 5.5500e+02 & 4.1300e+02 & 3.0544e-01 & 3.5694e-02 & 2.3910e+00 \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 5.5500e+02 & 4.1300e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 6.8000e+02 & 7.3100e+02 & 2.8850e+00 & 7.7951e-01 & 7.3735e+01 \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 5.8700e+02 & 1.2300e+02 & 2.1921e-01 & 1.6743e+00 & 1.5401e+02 \\
-
+newton & none & 30 & 29 & 60 & 0.00944507160316288 & 0.00212751879298489 & 0.00301893549106858 \\
+        newton & backtracking\_armijo & 500 & 28832 & 1500 & 1.40217621083041 & 0.749386170780335 & 24.4391556095872 \\
+        newton & wolfe\_strong & 32 & 161 & 3 & 0.00944505798397688 & 0.00212751739672079 & 0.00301893549105436 \\
+        newton & bisection\_wolfe\_weak & 500 & 29332 & 29832 & 1.40217621083041 & 0.749386170780335 & 24.4391556095872 \\
+        newton & bisection\_goldstein & 500 & 57664 & 1500 & 1.40217621083041 & 0.749386170780335 & 24.4391556095872 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 51 & 125 & 152 & 0.00944507163072084 & 0.00212751879491035 & 0.00301893549106858 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 13 & 36 & 51 & 0.0094450716307628 & 0.00212751879491324 & 0.00301893549106502 \\
+        newton & hanger\_zhang\_wolfe\_strong & 32 & 160 & 3 & 0.00944505798397688 & 0.00212751739672079 & 0.00301893549105436 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 13 & 53 & 38 & 0.00944507163068153 & 0.00212751879490758 & 0.00301893549106502 \\
+        newton & grippo\_backtracking\_armijo & 32 & 67 & 95 & 0.0094450716307577 & 0.00212751879491291 & 0.00301893549107213 \\
+        newton & grippo\_bisection\_wolfe\_weak & 13 & 37 & 51 & 0.0094450716307628 & 0.00212751879491324 & 0.00301893549106502 \\
+        newton & grippo\_wolfe\_strong & 32 & 161 & 3 & 0.00944505798397688 & 0.00212751739672079 & 0.00301893549105436 \\
+        newton & grippo\_bisection\_goldstein & 14 & 56 & 41 & 0.00944507162953712 & 0.00212751879482764 & 0.00301893549106502 \\
+        steepest & none & 14 & 56 & 41 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 16 & 110 & 31 & 0.00944507896129276 & 0.00212751971232195 & 0.00301893549106858 \\
+        steepest & wolfe\_strong & 15 & 115 & 61 & 0.00944506022664759 & 0.00212752224761714 & 0.00301893549106147 \\
+        steepest & bisection\_wolfe\_weak & 17 & 132 & 133 & 0.00944506989603866 & 0.00212751398628874 & 0.00301893549106502 \\
+        steepest & bisection\_goldstein & 16 & 220 & 31 & 0.00944507896129276 & 0.00212751971232195 & 0.00301893549106858 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 3430 & 1000 & 0.110247766267134 & 0.012056320259421 & 0.515693200985845 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 3900 & 3901 & 0.110247766267134 & 0.012056320259421 & 0.515693200985845 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 2943 & 2016 & 0.169951474669254 & 0.00500335112232564 & 0.762411106606868 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 6803 & 1000 & 0.110247766267134 & 0.012056320259421 & 0.515693200985845 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 2658 & 1000 & 0.7652547146868 & 0.564864006918325 & 13.0679718746747 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 3212 & 3663 & 2.40813299165156 & 0.215676515906718 & 42.8319444930591 \\
+        steepest & grippo\_wolfe\_strong & 500 & 2589 & 313 & 2.66605904808463 & 0.0958762173313089 & 55.2830946929112 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 5901 & 1000 & 0.417953470527013 & 0.0537699538133473 & 4.2044362456817 \\
 \end{tabular}}
 \caption{f4}
 \label{table:f4}
@@ -836,28 +898,32 @@ newton & none & 3.0000e+01 & 2.9000e+01 & 6.0000e+01 & 9.4451e-03 & 2.1275e-03 &
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 1.0000e+02 & 1.0000e+02 & 2.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & backtracking\_armijo & 1.0000e+02 & 2.0000e+02 & 3.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & wolfe\_strong & 1.0000e+02 & 2.0000e+02 & 1.0000e+00 & 1.4067e+00 & 8.8355e+00 & 2.7205e+23 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 3.0000e+02 & 4.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 4.0000e+02 & 3.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.9900e+02 & 3.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 2.9900e+02 & 4.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 1.9900e+02 & 1.0000e+00 & 1.4067e+00 & 8.8355e+00 & 2.7205e+23 \\
-        newton & grippo\_backtracking\_armijo & 1.0000e+02 & 1.4900e+02 & 3.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.4900e+02 & 4.0000e+02 & 1.1675e+00 & 4.1439e+00 & 1.1064e+03 \\
-        newton & grippo\_wolfe\_strong & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & 1.4067e+00 & 8.8355e+00 & 2.7205e+23 \\
-        steepest & none & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & wolfe\_strong & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 1.4900e+02 & 1.0000e+00 & Inf & Inf & Inf \\
+newton & none & 500 & 500 & 1000 & nan & nan & nan \\
+        newton & backtracking\_armijo & 8 & 15 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & wolfe\_strong & 46 & 297 & 3 & 3.77914090634046e-07 & 3.79807894764903e-08 & 1.44261600269003e-13 \\
+        newton & bisection\_wolfe\_weak & 8 & 22 & 31 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & bisection\_goldstein & 8 & 30 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 8 & 14 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 8 & 21 & 31 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & hanger\_zhang\_wolfe\_strong & 27 & 72 & 3 & 3.13196976600962e-07 & 5.62808575037828e-08 & 1.01259881073325e-13 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 8 & 29 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & grippo\_backtracking\_armijo & 8 & 15 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & grippo\_bisection\_wolfe\_weak & 8 & 22 & 31 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        newton & grippo\_wolfe\_strong & 28 & 75 & 3 & 3.34460821382877e-07 & 2.2751932156175e-08 & 1.12381691456945e-13 \\
+        newton & grippo\_bisection\_goldstein & 8 & 30 & 23 & 4.89829097422012e-13 & 1.411519032286e-12 & 2.23231852318687e-24 \\
+        steepest & none & 8 & 30 & 23 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 5 & 16 & 9 & 1.44238719817884e-13 & 2.88850715535974e-12 & 8.36427839485914e-24 \\
+        steepest & wolfe\_strong & 6 & 13 & 2 & 4.14733009795941e-12 & 3.01513032748522e-13 & 1.72912570503572e-23 \\
+        steepest & bisection\_wolfe\_weak & 169 & 511 & 512 & 2.155342623128e-10 & 3.11857371215112e-08 & 9.7259665483023e-16 \\
+        steepest & bisection\_goldstein & 5 & 32 & 9 & 1.44238719817884e-13 & 2.88850715535974e-12 & 8.36427839485914e-24 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 1005 & 1000 & 1.96095183617286e-05 & 0.00434185345905832 & 1.88520757571636e-05 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 1508 & 1509 & 0.211905875131239 & 1.80834824516452e-10 & 0.0449040999151361 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 6 & 12 & 2 & 4.14733009795941e-12 & 3.01513032748522e-13 & 1.72912570503572e-23 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 2011 & 1000 & 1.96095183617286e-05 & 0.00434185345905832 & 1.88520757571636e-05 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 554 & 1000 & 0.356422946019359 & 0.00324032472016607 & 0.127037011635254 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 1058 & 1509 & 0.211905875131239 & 1.80834824516452e-10 & 0.0449040999151361 \\
+        steepest & grippo\_wolfe\_strong & 6 & 13 & 2 & 4.14733009795941e-12 & 3.01513032748522e-13 & 1.72912570503572e-23 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 1559 & 1000 & 0.356422946019359 & 0.00324032472016607 & 0.127037011635254 \\
 \end{tabular}}
 \caption{f5}
 \label{table:f5}
@@ -867,27 +933,32 @@ newton & none & 1.0000e+02 & 1.0000e+02 & 2.0000e+02 & 1.1675e+00 & 4.1439e+00 &
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 3.7000e+01 & 3.6000e+01 & 7.4000e+01 & 4.6080e-03 & 3.6226e-02 & 2.9827e-09 \\ newton & backtracking\_armijo & 3.4000e+01 & 9.5000e+01 & 1.0100e+02 & 4.8818e-03 & 1.7065e-03 & 4.3311e-09 \\
-        newton & wolfe\_strong & 7.0000e+01 & 1.3800e+02 & 3.0000e+00 & 9.8558e-03 & 3.6304e-03 & 4.0152e-10 \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 1.9720e+03 & 2.0720e+03 & 8.9327e-01 & 1.2775e+00 & 3.7022e+01 \\
-        newton & bisection\_goldstein & 1.0000e+02 & 3.7440e+03 & 3.0000e+02 & 8.9327e-01 & 1.2775e+00 & 3.7022e+01 \\
-        newton & hanger\_zhang\_backtracking\_armijo & 3.7000e+01 & 7.1000e+01 & 1.1000e+02 & 4.6080e-03 & 3.6226e-02 & 2.9827e-09 \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 3.7000e+01 & 1.0700e+02 & 1.4600e+02 & 4.6080e-03 & 3.6226e-02 & 2.9827e-09 \\
-        newton & hanger\_zhang\_wolfe\_strong & 7.0000e+01 & 1.3700e+02 & 3.0000e+00 & 9.8558e-03 & 3.6304e-03 & 4.0152e-10 \\
-        newton & grippo\_backtracking\_armijo & 3.7000e+01 & 7.2000e+01 & 1.1000e+02 & 4.6080e-03 & 3.6226e-02 & 2.9827e-09 \\
-        newton & grippo\_bisection\_wolfe\_weak & 3.7000e+01 & 1.0800e+02 & 1.4600e+02 & 4.6080e-03 & 3.6226e-02 & 2.9827e-09 \\
-        newton & grippo\_wolfe\_strong & 7.0000e+01 & 1.1800e+02 & 3.0000e+00 & 9.8558e-03 & 3.6304e-03 & 4.0152e-10 \\
-        steepest & none & 7.0000e+01 & 1.1800e+02 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & backtracking\_armijo & 7.0000e+01 & 1.1800e+02 & 3.0000e+00 & Inf & Inf & Inf \\
-        steepest & wolfe\_strong & 1.0000e+02 & 2.0820e+03 & 1.0000e+00 & NaN & NaN & NaN \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 2.0820e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 2.0820e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 2.0820e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 2.0820e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 2.0810e+03 & 1.0000e+00 & NaN & NaN & NaN \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 2.0810e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 2.0810e+03 & 1.0000e+00 & Inf & Inf & Inf \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 2.0310e+03 & 1.0000e+00 & NaN & NaN & NaN \\
+newton & none & 37 & 36 & 74 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & backtracking\_armijo & 500 & 28301 & 1500 & 0.893506487831735 & 1.27695453248203 & 37.0167026012061 \\
+        newton & wolfe\_strong & 70 & 138 & 3 & 0.00985581264257892 & 0.00363037590607557 & 4.01519536572564e-10 \\
+        newton & bisection\_wolfe\_weak & 500 & 28801 & 29301 & 0.893506487831735 & 1.27695453248203 & 37.0167026012061 \\
+        newton & bisection\_goldstein & 500 & 57510 & 1500 & 0.893506487831732 & 1.27695453248204 & 37.0167026012061 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 37 & 71 & 110 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 37 & 107 & 146 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & hanger\_zhang\_wolfe\_strong & 70 & 137 & 3 & 0.00985581264257892 & 0.00363037590607557 & 4.01519536572564e-10 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 37 & 143 & 110 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & grippo\_backtracking\_armijo & 37 & 72 & 110 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & grippo\_bisection\_wolfe\_weak & 37 & 108 & 146 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        newton & grippo\_wolfe\_strong & 70 & 118 & 3 & 0.00985581264257892 & 0.00363037590607557 & 4.01519536572564e-10 \\
+        newton & grippo\_bisection\_goldstein & 37 & 144 & 110 & 0.00460802299475496 & 0.0362261381405636 & 2.98269727957887e-09 \\
+        steepest & none & 37 & 144 & 110 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 500 & 1092 & 1000 & 0.0666066361057425 & 0.0185002324226997 & 6.0722905800521e-07 \\
+        steepest & wolfe\_strong & 500 & 50322 & 1 & nan & nan & nan \\
+        steepest & bisection\_wolfe\_weak & 60 & 301 & 302 & 0.005195176606012 & 0.00182225441585104 & 3.68075857596937e-10 \\
+        steepest & bisection\_goldstein & 500 & 2290 & 1000 & 0.0651349017467596 & 0.0181129101847233 & 5.48889305038522e-07 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 2221 & 1000 & 0.022635334244046 & 0.00636493200408353 & 9.83881740076674e-08 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 7245 & 7246 & 0.0218972681311113 & 6.4121234380443 & 69393.6325492634 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 50321 & 1 & nan & nan & nan \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 166 & 3667 & 331 & 0.0112560212211305 & 0.00363016759083291 & 1.4683617982731e-09 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 6532 & 1000 & 0.0280618770171623 & 0.0324842685042696 & 1.16050306856531e-06 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 9161 & 9612 & 3.60164556326196 & 0.16240463532612 & 52466.7421259742 \\
+        steepest & grippo\_wolfe\_strong & 500 & 49871 & 1 & nan & nan & nan \\
+        steepest & grippo\_bisection\_goldstein & 424 & 13616 & 847 & 0.00324180038832575 & 0.0352156436622173 & 7.94665630978067e-10 \\
 
 \end{tabular}}
 \caption{f6}
@@ -898,32 +969,74 @@ newton & none & 3.7000e+01 & 3.6000e+01 & 7.4000e+01 & 4.6080e-03 & 3.6226e-02 &
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 1.0000e+02 & 1.0000e+02 & 2.0000e+02 & Inf & Inf & Inf \\
-        newton & backtracking\_armijo & 1.0000e+02 & 1.0570e+03 & 3.0000e+02 & Inf & Inf & Inf \\
-        newton & wolfe\_strong & 1.0000e+02 & 1.1780e+03 & 4.0500e+02 & Inf & Inf & Inf \\
-        newton & bisection\_wolfe\_weak & 1.0000e+02 & 1.1240e+03 & 1.2240e+03 & Inf & Inf & Inf \\
-        newton & bisection\_goldstein & 1.0000e+02 & 4.2000e+03 & 3.0000e+02 & Inf & Inf & Inf \\
-        newton & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 1.0840e+03 & 3.0000e+02 & Inf & Inf & Inf \\
-        newton & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 2.1200e+03 & 2.2210e+03 & Inf & Inf & Inf \\
-        newton & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 1.1840e+03 & 3.9800e+02 & Inf & Inf & Inf \\
-        newton & grippo\_backtracking\_armijo & 1.0000e+02 & 3.5100e+02 & 3.0000e+02 & Inf & Inf & Inf \\
-        newton & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 1.8910e+03 & 2.0420e+03 & Inf & Inf & Inf \\
-        newton & grippo\_wolfe\_strong & 1.0000e+02 & 1.0840e+03 & 4.2200e+02 & Inf & Inf & Inf \\
-        steepest & none & 1.0000e+02 & 1.0000e+02 & 1.0000e+02 & Inf & Inf & Inf \\
-        steepest & backtracking\_armijo & 1.0000e+02 & 5.8700e+02 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & wolfe\_strong & 1.0000e+02 & 1.1260e+03 & 2.0000e+00 & Inf & Inf & Inf \\
-        steepest & bisection\_wolfe\_weak & 1.0000e+02 & 1.9350e+03 & 1.9350e+03 & Inf & Inf & Inf \\
-        steepest & bisection\_goldstein & 1.0000e+02 & 1.9350e+03 & 1.9350e+03 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_backtracking\_armijo & 1.0000e+02 & 5.8600e+02 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 1.0000e+02 & 1.9490e+03 & 1.9500e+03 & Inf & Inf & Inf \\
-        steepest & hanger\_zhang\_wolfe\_strong & 1.0000e+02 & 1.1660e+03 & 3.0800e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_backtracking\_armijo & 1.0000e+02 & 5.3600e+02 & 2.0000e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_bisection\_wolfe\_weak & 1.0000e+02 & 6.4400e+02 & 6.9500e+02 & Inf & Inf & Inf \\
-        steepest & grippo\_wolfe\_strong & 1.0000e+02 & 6.4400e+02 & 4.0000e+00 & Inf & Inf & Inf \\
+newton & none & 10 & 9 & 20 & 3.02442e-08 & 1.00000000009037 & 0.999999917245185 \\
+        newton & backtracking\_armijo & 500 & 25496 & 1500 & 3.02442e-08 & 1.00000548864712 & 0.999999775079201 \\
+        newton & wolfe\_strong & 500 & 5770 & 1910 & 1.11385499484599e-07 & 1.00003513032185 & 0.99999999704267 \\
+        newton & bisection\_wolfe\_weak & 500 & 25996 & 26496 & 3.02442e-08 & 1.00000548864712 & 0.999999775079201 \\
+        newton & bisection\_goldstein & 500 & 51298 & 1500 & 3.02442e-08 & 1.00000548864712 & 0.999999775079201 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 10 & 17 & 29 & 3.02442e-08 & 1.00000000009037 & 0.999999917245185 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 13 & 47 & 62 & 3.02442e-08 & 1.00000000021848 & 0.999999999999998 \\
+        newton & hanger\_zhang\_wolfe\_strong & 41 & 249 & 5 & 2.84717525700536e-08 & 1.0000004397091 & 0.999999999904087 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 13 & 73 & 38 & 3.02442e-08 & 1.00000008737687 & 1.00000000000001 \\
+        newton & grippo\_backtracking\_armijo & 10 & 18 & 29 & 3.02442e-08 & 1.00000000009037 & 0.999999917245185 \\
+        newton & grippo\_bisection\_wolfe\_weak & 13 & 48 & 62 & 3.02442e-08 & 1.00000000021848 & 0.999999999999998 \\
+        newton & grippo\_wolfe\_strong & 41 & 250 & 5 & 2.84717525700536e-08 & 1.0000004397091 & 0.999999999904087 \\
+        newton & grippo\_bisection\_goldstein & 13 & 74 & 38 & 3.02442e-08 & 1.00000008737687 & 1.00000000000001 \\
+        steepest & none & 13 & 74 & 38 & inf & inf & inf \\
+        steepest & backtracking\_armijo & 500 & 1011 & 1000 & 3.02442e-08 & 0.999984513229822 & 0.998994446909997 \\
+        steepest & wolfe\_strong & 500 & 49813 & 1 & 3.02442e-08 & 1.00000042222824 & 0.998995455609755 \\
+        steepest & bisection\_wolfe\_weak & 500 & 1517 & 1517 & 3.02442e-08 & 0.000864571957612359 & 0.998971605826144 \\
+        steepest & bisection\_goldstein & 500 & 2056 & 1000 & 3.02442e-08 & 0.999681514288948 & 0.99857100247585 \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 1008 & 1000 & 3.02442e-08 & 0.000224903795682962 & 0.998993486249368 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 1507 & 1508 & 1.4062499697558 & 0.00566844209286244 & 2.9765637599573 \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 49812 & 1 & 3.02442e-08 & 1.00000042222824 & 0.998995455609755 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 2017 & 1000 & 3.02442e-08 & 0.000224903795682962 & 0.998993486249368 \\
+        steepest & grippo\_backtracking\_armijo & 500 & 561 & 1000 & 0.8789062802442 & 1.00517098318994 & 1.77149699616421 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 1061 & 1512 & 0.8789062802442 & 1.00517098318994 & 1.77149699616421 \\
+        steepest & grippo\_wolfe\_strong & 500 & 49266 & 1 & 3.02442e-08 & 1.16831083885049e-06 & 0.998996305436599 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 1573 & 1000 & 0.8789062802442 & 1.00517098318994 & 1.77149699616421 \\
 
 \end{tabular}}
 \caption{f7}
 \label{table:f7}
+\end{table}
+
+\begin{table}[h!]
+\resizebox{1.2\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+        method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
+newton & none & 500 & 500 & 1000 & 0.303423857675313 & 0.624148677091616 & 0.861533054274976 \\
+        newton & backtracking\_armijo & 500 & 24722 & 1500 & 0.742465459426631 & 0.855973919829325 & 0.568992441441347 \\
+        newton & wolfe\_strong & 500 & 6445 & 1981 & 0.744404845285538 & 0.860146339368246 & 0.570744491252261 \\
+        newton & bisection\_wolfe\_weak & 500 & 27390 & 27890 & 0.775276138921232 & 0.820599277205014 & 0.654647202982248 \\
+        newton & bisection\_goldstein & 500 & 54978 & 1500 & 0.775276138921232 & 0.820599277205016 & 0.654647202982248 \\
+        newton & hanger\_zhang\_backtracking\_armijo & 500 & 1000 & 1500 & 0.176515467881787 & 0.091987171779198 & 0.154079142308268 \\
+        newton & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 31019 & 31520 & 0.811900531432556 & 0.889145626048196 & 0.68729384050004 \\
+        newton & hanger\_zhang\_wolfe\_strong & 500 & 49600 & 1 & 0.457307224641013 & 0.509310024249492 & 0.235916735938341 \\
+        newton & hanger\_zhang\_bisection\_goldstein & 500 & 93691 & 1500 & 0.811902996063075 & 0.889150381746929 & 0.68729599629033 \\
+        newton & grippo\_backtracking\_armijo & 500 & 550 & 1500 & 0.176515467881787 & 0.091987171779198 & 0.154079142308268 \\
+        newton & grippo\_bisection\_wolfe\_weak & 272 & 2512 & 3007 & 4.92310780764171e-06 & 8.66498971696661e-06 & 1.03208687859225e-10 \\
+        newton & grippo\_wolfe\_strong & 500 & 49150 & 1 & 0.457307224641013 & 0.509310024249492 & 0.235916735938341 \\
+        newton & grippo\_bisection\_goldstein & 176 & 2682 & 527 & 5.48847622117155e-06 & 1.09179159012429e-05 & 1.07845037004684e-10 \\
+        steepest & none & 500 & 500 & 500 & 0.189799372986809 & 0.566560393253189 & 0.0610550619232203 \\
+        steepest & backtracking\_armijo & 500 & 1013 & 1000 & 0.174021988515108 & 0.535634710876691 & 0.0532824540881663 \\
+        steepest & wolfe\_strong & 500 & 47155 & 1 & 0.21553186936795 & 0.611288896958028 & 0.0740832470993885 \\
+        steepest & bisection\_wolfe\_weak & 500 & 47155 & 1 & inf & inf & inf \\
+        steepest & bisection\_goldstein & 500 & 47155 & 1 & inf & inf & inf \\
+        steepest & hanger\_zhang\_backtracking\_armijo & 500 & 999 & 1000 & 0.189799372986809 & 0.566560393253189 & 0.0610550619232203 \\
+        steepest & hanger\_zhang\_bisection\_wolfe\_weak & 500 & 999 & 1000 & inf & inf & inf \\
+        steepest & hanger\_zhang\_wolfe\_strong & 500 & 47154 & 1 & 0.21553186936795 & 0.611288896958028 & 0.0740832470993885 \\
+        steepest & hanger\_zhang\_bisection\_goldstein & 500 & 47154 & 1 & inf & inf & inf \\
+        steepest & grippo\_backtracking\_armijo & 500 & 549 & 1000 & 0.189799372986809 & 0.566560393253189 & 0.0610550619232203 \\
+        steepest & grippo\_bisection\_wolfe\_weak & 500 & 549 & 1000 & inf & inf & inf \\
+        steepest & grippo\_wolfe\_strong & 500 & 46704 & 1 & 0.21553186936795 & 0.611288896958028 & 0.0740832470993885 \\
+        steepest & grippo\_bisection\_goldstein & 500 & 46704 & 1 & inf & inf & inf \\
+
+
+
+\end{tabular}}
+\caption{f8}
+\label{table:f8}
 \end{table}
 
 \clearpage
@@ -940,15 +1053,16 @@ newton & none & 1.0000e+02 & 1.0000e+02 & 2.0000e+02 & Inf & Inf & Inf \\
         
     \item Using the Armijo condition for the steepest descent, we can notice that the step size is adjusted and now the algorithm hasn't diverged compared to the fixed step size method mentioned above. But it seems that it is advancing very slowly. Having a threshold of 100 maximum iterations, the algorithm didn't converged.
     
-    \item Using the wolfe weak conditions, a new condition needs to be fullfiled for the line search. Thus making the choice of the step size even more sophisticated with values very close to 0 (1e-16). This resulted to a very slow progress. Practically the algorithm has been stucked. 
-    
-    The same applies for the steepest descent, but the step size values were in the range (1e-1, 1e-4), same as the armijo condition.
 
-    This contradicts with the intention of the wolfe condition. It is supposed to rule out small values of $\alpha$ and make the search to move faster. Why it contradicts?
+    \item A very special case of the last function tested above ($f_8$), is where the gradient of the function contains the square root of the coordinates. Thus if during the iterative approach, a point with negative coordinates will occur, the result of the gradient will have an imaginary field, causing the algorithm to break. In other words, it is possible to calculate inputs that are \textbf{outside of the domain of the function}. How to resolve this? (setting boundaries or using projections)
 
-    \item A very special case of the last function tested above ($f_7$), is where the gradient of the function contains the square root of the coordinates. Thus if during the iterative approach, a point with negative coordinates will occur, the result of the gradient will have an imaginary field, causing the algorithm to break. In other words, it is possible to calculate inputs that are \textbf{outside of the domain of the function}. How to resolve this? (setting boundaries or using projections)
+    The actual problem of the above was the initial step size value, that was usually ($a=1$). Thus initially, the $x+a*pk$ could result to a value outside of the domain of the function, causing the rest of the algorithm to fail. To keep the initial alpha value within the boundaries, we have added the function \verb|check_boundaries.m|.
 
     \item A thing to consider, is that when trying to calculate a step size to satisfy some conditions, we set a threshold of iterations. If the threshold is met (\textbf{max number of iterations}), then we still return the latest alpha value, that doesn't though satisfy the conditions, thus theoretically speaking the algorithm may not converge. How to resolve this edge case, where we exceed a certain number of iterations, since there should be a point where the algorithm needs to return.
+
+    \item Steepest descent method usually has greater error values, because the direction vector $p_k$ isn't normalized with the hessian matrix as it is happening with the newton method and could have very large values that can be controlled by the choice of the step size ($a*pk$). But the step size configuration has a maximum number of iterations. For the backtracking armijo for example, based on the $rho$ value, we backtrack a for each iteration. If the initial a value is high and $rho$ isn't small enough and number of max iterations is small, then a value can be not small enough to reduce the effect of the direction vector. Thus, to reduce some 'Inf' values we could experiment with the choice of the aforementioned parameters. On the other hand, increasing the number of iterations trying to find a step size satisfying some conditions, can lead to very small values making the algorithm to stuck. If alpha values is found before the max number of iterations, then increasing the iterations of the \verb|newton| or the \verb|steepest descent| will lead to a better result (may the $a*pk$ be reasonable but the iterations not enough to calculate the next better $x$).
+
+    \item For $f_6$, the algorithm diverges when using wolfe strong as step size method. The problem occurs because when searching for the step size, we reach maximum number iterations (20), before satisfying the conditions. Resulting with a not small enough value to counter the very large value of direction vector ($p_k$), thus making the product $a*pk$, a very large value, diverging the $x$.
     
 \end{itemize} 
 
@@ -957,14 +1071,14 @@ newton & none & 1.0000e+02 & 1.0000e+02 & 2.0000e+02 & Inf & Inf & Inf \\
 
 Every iterative algorithm for line search is based on:
 
-\[x_{k+1} = x_k + \alpha*p_k\]
+\[x_{k+1} = x_k + a p_k\]
 
 The research interest arises on the choice of the step size $\alpha$ and the direction $p_k$, the convergence, the rate of it and the derivative requirements (is the knowledge of first or second order derivatives required ?).
 
 For the direction,  
 the core idea of the line search methods lies into the Taylor approximation of a function near a point:
 
-\[f(x_k + \alpha p) = f(x_k) + a p^T \nabla f_k + \frac{1}{2} \alpha^2 p^T \nabla^2 f(x_k + tp) p\]
+\[f(x_k + a p) = f(x_k) + a p^T \nabla f_k + \frac{1}{2} a^2 p^T \nabla^2 f(x_k + tp) p\]
 
 Considering $\nabla^2 f$ as positive definitive, to decrease the function $f$, then our goal is to find $p$ such that
 $min$ $p^T \nabla f_k$. By definition of the dot product ($min$ $|\nabla f_k| |p_k| cos \theta$), $p$ should be $p = - \nabla f_k / ||\nabla f_k||$. Thus the steepest descent method uses $p_k = - \nabla f_k$.
@@ -1027,6 +1141,8 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 
 \subsection{utils}
+\textbf{check\_boundaries.m}
+\lstinputlisting{code/utils/check_boundaries.m}
 \textbf{is\_vector.m}
 \lstinputlisting{code/utils/is_vector.m}
 \textbf{plot\_line\_search1.m}
@@ -1072,6 +1188,3 @@ Comparison between steepest descent, Newton and quasi-Netwon methods:
 
 
 \end{document}
-
-
-

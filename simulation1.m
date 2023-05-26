@@ -8,71 +8,87 @@ addpath(genpath(directory))
 
 
 
-function [f,startp,xmin,fmin] = rosen_sym()
-    syms x y
-    f = 100*(y-x^2)^2 + (1-x)^2;
+function [f,startp,xmin,fmin,domains] = f1_sym()
+    syms x1 x2
+    f = 100*(x2-x1^2)^2 + (1-x1)^2;
     startp = [-1.8,-1.8]';
     xmin = [1,1]';
     fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
 end
 
-function [f,startp,xmin,fmin] = f1_sym()
-    syms x y
-    f = x^2 + 4*y^2 + 2*x*y;
+function [f,startp,xmin,fmin,domains] = f2_sym()
+    syms x1 x2
+    f = x1^2 + 4*x2^2 + 2*x1*x2;
     startp = [-3,-3]';
     xmin = [0,0]';
     fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
 end
 
-function [f,startp,xmin,fmin] = f2_sym()
-    syms x y
-    f = (x+2*y-7)^2 + (2*x + y - 5)^2;
+function [f,startp,xmin,fmin,domains] = f3_sym()
+    syms x1 x2
+    f = (x1+2*x2-7)^2 + (2*x1 + x2 - 5)^2;
     startp = [-9.5,-9.5]';
     xmin = [1,3]';
     fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
 end
 
-function [f,startp,xmin,fmin] = f3_sym()
-    syms x y 
-    f = 5*x^4 + 6*y^4 - 6*x^2 + 2*x*y + 5*y^2 + 15*x - 7*y + 13;
+function [f,startp,xmin,fmin,domains] = f4_sym()
+    syms x1 x2
+    f = 5*x1^4 + 6*x2^4 - 6*x1^2 + 2*x1*x2 + 5*x2^2 + 15*x1 - 7*x2 + 13;
     startp = [1.9,-1.9]';
     xmin = [-1.1515,0.5455]';
     fmin = -6.4931;
+    domains = {[-inf,inf], [-inf,inf]};
 end
 
-function [f,startp,xmin,fmin] = f4_sym()
-    syms x y
-    f = (x^2)^(y^2 + 1) + (y^2)^(x^2 + 1);
-    startp = [-1.5,11.25]';
+function [f,startp,xmin,fmin,domains] = f5_sym()
+    syms x1 x2
+    f = (x1^2)^(x2^2 + 1) + (x2^2)^(x1^2 + 1);
+    startp = [-1.5,1.25]';
     xmin = [0,0]';
     fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
 end
 
-function [f,startp,xmin,fmin] = f5_sym()
-    syms x y z
-    f = (x^2 + y^3 - z^4)^2 + (2*x*y*z)^2 + (2*x*y-3*y*z+x*z)^2;
+function [f,startp,xmin,fmin,domains] = f6_sym()
+    syms x1 x2 x3
+    f = (x1^2 + x2^3 - x3^4)^2 + (2*x1*x2*x3)^2 + (2*x1*x2-3*x2*x3+x1*x3)^2;
     startp = [10,10,10]';
     xmin = [0.0048605831,0.0016994507, 0]';
     fmin = 0;
+    domains = {[-inf,inf], [-inf,inf], [-inf,inf]};
 end
 
+function [f,startp,xmin,fmin,domains] = f7_sym()
+    syms x1 x2 x3
+    f = x1^2 + (x2 + x2^2)^2 + (-1 + exp(x3))^2;
+    startp = [2, 3, -8]';
+    xmin = [3.02442e-08, -1, 2.40687e-08]';
+    fmin = 1.58063e-15;
+    domains = {[-inf,inf], [-inf,inf], [-inf,inf]};
+end
 
-function [f,startp,xmin,fmin] = f6_sym()
-    syms x y z k
-    f = (x-1)^2 + (x-sqrt(y))^2 + (y-sqrt(z))^2 + (z-sqrt(k))^2;
+function [f,startp,xmin,fmin,domains] = f8_sym()
+    syms x1 x2 x3 x4
+    f = (x1-1)^2 + (x1-sqrt(x2))^2 + (x2-sqrt(x3))^2 + (x3-sqrt(x4))^2;
     startp = [0.1,0.1,0.1,0.1]';
     xmin = [0.999993, 0.999983, 0.999964, 0.999912]';
     fmin = 1.13719e-10;
+    domains = {[-inf,inf], [0,inf], [0,inf], [0,inf]}; # exclude zero take into account grad
 end
 
 
-functions_info = {@rosen_sym, 
-            @f1_sym, 
+functions_info = {@f1_sym, 
             @f2_sym, 
             @f3_sym, 
             @f4_sym, 
             @f5_sym, 
-            @f6_sym};
+            @f6_sym, 
+            @f7_sym, 
+            @f8_sym};
 
 starting_points = {[-1.8, -1.8]',
                     [-3,-3]',
@@ -81,6 +97,7 @@ starting_points = {[-1.8, -1.8]',
                     [-1.5,1.25]',
                     [10,10,10]',
                     [0.1,0.1,0.1,0.1]'};
+
 expected_fmin = {0,
                 0,
                 0,
@@ -88,6 +105,7 @@ expected_fmin = {0,
                 0,
                 0,
                 1.13719e-10};
+
 expected_xmin = {[1,1]',
                     [0,0]',
                     [1,3]',
@@ -106,9 +124,11 @@ line_search_methods = {'none',
                         'hanger_zhang_backtracking_armijo', 
                         'hanger_zhang_bisection_wolfe_weak',
                         'hanger_zhang_wolfe_strong',
+                        'hanger_zhang_bisection_goldstein',
                         'grippo_backtracking_armijo',
                         'grippo_bisection_wolfe_weak',
-                        'grippo_wolfe_strong'};
+                        'grippo_wolfe_strong',
+                        'grippo_bisection_goldstein'};
 
 table = simulation(functions_info, line_search_methods);
 

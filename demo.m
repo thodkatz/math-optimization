@@ -53,13 +53,46 @@ end
 %search_y = -1:1:1;
 %[xmin, fmin] = newton(f5_sym, [10,10,10]', "nonmonotone_backtracking_wolfe_weak", search_x, search_y);
 
+function f = f7_sym()
+    syms x1 x2 x3
+    f = x1^2 + (x2 + x2^2)^2 + (-1 + exp(x3))^2;
+end
+
+function [f,domains] = f8_sym()
+    syms x1 x2 x3 x4
+    f = (x1-1)^2 + (x1-sqrt(x2))^2 + (x2-sqrt(x3))^2 + (x3-sqrt(x4))^2;
+    domains = {[-inf,inf], [0,inf], [0,inf], [0,inf]}; # exclude zero take into account grad
+end
+
+% search_x = -1:1:1;
+% search_y = -1:1:1;
+% c = [1e-4 0.9];
+% rho = 2;
+% [xmin, fmin] = newton(f7_sym, [2,3,-8]', 'wolfe_strong', search_x, search_y, c, rho);
+
 function f = f1_sym()
     syms x y
     f = x^2 + 4*y^2 + 2*x*y;
 end
 
-search_x = -3:0.2:0.4;
-search_y = -3:0.2:0.4;
-memory_limit = 100;
-[xmin, fmin] = newton(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
-[xmin, fmin, iter] = steepest_descent(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
+% search_x = -3:0.2:0.4;
+% search_y = -3:0.2:0.4;
+% memory_limit = 100;
+
+% c = [1e-4 0.9];
+% rho = 2;
+% [xmin, fmin] = steepest_descent(rosen_sym, [-1.8,-1.8]', 'hanger_zhang_wolfe_strong', search_x, search_y, c=c, rho=rho, a=1, eps=1e-6, max_iters=1000, to_plot=false);
+
+
+% [xmin, fmin] = newton(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
+% [xmin, fmin, iter] = steepest_descent(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
+
+search_x = -1:1:1;
+search_y = -1:1:1;
+c = [1e-4, 0.9];
+rho = 2;
+a = 1;
+eps = 1e-6;
+max_iters=4;
+[f8,domains] = f8_sym
+[xmin, fmin] = newton(f8, domains, [0.1,0.1,0.1,0.1]', 'bisection_wolfe_weak', search_x, search_y, c=c, rho=rho,a=a,eps,max_iters=max_iters, to_plot=false);

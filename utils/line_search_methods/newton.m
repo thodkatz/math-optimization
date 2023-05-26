@@ -1,4 +1,4 @@
-function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_function_evaluations] = newton(f_sym, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=true, varargin)
+function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_function_evaluations] = newton(f_sym, domains, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=1000, to_plot=true, varargin)
     % NEWTON Find the minimum of a function using the Newton method
     %
     % USAGE:
@@ -73,6 +73,9 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
         [hess_x, number_of_gradient_function_evaluations] = f_hessian(x, number_of_gradient_function_evaluations);
         pk = -linsolve(hess_x, grad_x);
 
+        % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
+        a = check_boundaries(x, a, pk, domains);
+
         % check for convergence
         if norm(grad_x) < eps
             break
@@ -104,7 +107,7 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
         x += step*pk;
         steps_all(end+1) = step;
         xall{end+1} = x;
-        % fprintf("Iter %d, x=[%f,%f], a=%f\n", iter, x(1), x(2), step)
+        fprintf("Iter %d, x=[%0.4e,%0.4e], a=%0.4e, grad norm=%0.4e \n", iter, x(1), x(2), step, norm(pk))
     end
     fprintf("ENDED Line search using newton\n")
     xmin = x
@@ -117,3 +120,4 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
         plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
     end
 end
+
