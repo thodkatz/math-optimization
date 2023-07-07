@@ -463,6 +463,33 @@ For the results, check the \ref{simulation2}.
 \subsubsection{Numerical Results}
 \label{simulation2}
 
+\textbf{Wolfe strong}
+
+\begin{align*}
+a &= 1 \\
+rho &= 2 \\
+c1 &= 1e-4 \\
+c2 &= 0.9 \\
+eps &= 1e-16 \\ 
+max\_iters &= 5000 \\ 
+max\_iters\_step\_size &= 50 \\
+max\_iters\_zoom &= 10 \\
+\end{align*}
+
+\textbf{Non wolfe methods}
+
+\begin{align*}
+a &= 1 \\
+rho &= 0.6 \\
+c &= 0.1 \\
+eps &= 1e-16 \\ 
+max\_iters &= 5000 \\ 
+max\_iters\_step\_size &= 50 \\
+\end{align*}
+
+For grippo, we have added the $memory\_limit = 10$ parameter.
+
+
 \begin{table}[h!]
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
@@ -595,6 +622,20 @@ newton & backtracking\_armijo & 5000 & 254658 & 15000 & 1.99656018326997 & 0.003
 \caption{wood}
 \label{table:wood}
 \end{table}
+
+\clearpage
+
+\textbf{Question}
+Why using \verb|steepest descent - Hanger Zhang| has bad performance instead of the newton equivalent?
+
+\textbf{Answer}
+The Hanger Zhang method is being tested for second order derivatives methods, and there isn't any analysis for the steepest descent method.
+
+\textbf{Question}
+Why \verb|steepest - grippo - wolfe - strong| doesn't converge?
+
+\textbf{Answer}
+There is a maximum number of iterations when searching alpha values to satisfy the wole strong conditions. If the number of iterations is reached, then we still return the latest alpha value. But, the last one hasn't satisfy the conditions, thus divergence is possible. Carefully tuning particular cases, could resolve these issues.
 
 \begin{table}[h!]
 \resizebox{1.2\textwidth}{!}{
@@ -742,12 +783,39 @@ Program the steepest descent and Newton algorithms using the a) backtracking lin
 For the analysis we have created the tables under \ref{simulation1}. For the plots you can check \ref{plots}.
 
 
-
-
-
 % Problems listed on Chapter 3 of \cite{nocedal1999numerical}.
 \subsubsection{Numerical results}
 \label{simulation1}
+
+
+
+The configuration for the methods is as follows:
+
+\textbf{Wolfe strong}
+
+\begin{align*}
+a &= 1 \\
+rho &= 2 \\
+c1 &= 1e-4 \\
+c2 &= 0.9 \\
+eps &= 1e-16 \\ 
+max\_iters &= 5000 \\ 
+max\_iters\_step\_size &= 50 \\
+max\_iters\_zoom &= 10 \\
+\end{align*}
+
+\textbf{Non wolfe methods}
+
+\begin{align*}
+a &= 1 \\
+rho &= 0.6 \\
+c &= 0.1 \\
+eps &= 1e-16 \\ 
+max\_iters &= 5000 \\ 
+max\_iters\_step\_size &= 50 \\
+\end{align*}
+
+For grippo, we have added the $memory\_limit = 10$ parameter.
 
 \begin{table}[h!]
 \resizebox{1.2\textwidth}{!}{
@@ -783,6 +851,20 @@ newton & none & 7 & 7 & 14 & 0 & 0 & 0 \\
 \caption{f1}
 \label{table:f1}
 \end{table}
+
+\clearpage
+
+\textbf{Question}
+Why using \verb|steepest descent - Hanger Zhang| has bad performance instead of the newton equivalent?
+
+\textbf{Answer}
+The Hanger Zhang method is being tested for second order derivatives methods, and there isn't any analysis for the steepest descent method. We could also epxeriment with the degree of non-monotonicity (here it is pure nonmonotone ($\eta_k = 1$)).
+
+\textbf{Question}
+Why \verb|steepest - grippo/HangerZhang - wolfe - strong| doesn't converge?
+
+\textbf{Answer}
+There is a maximum number of iterations when searching alpha values to satisfy the wole strong conditions. If the number of iterations is reached, then we still return the latest alpha value. But, the last one hasn't satisfy the conditions, thus divergence is possible. Carefully tuning particular cases, could resolve these issues.
 
 \begin{table}[h!]
 \resizebox{1.2\textwidth}{!}{
@@ -895,7 +977,7 @@ newton & none & 5000 & 5001 & 10000 & 0.00944507163076302 & 0.00212751879491324 
 \resizebox{1.2\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
         method & step size & iterations & $n_{f\_eval}$ & $n_{fgrad\_eval}$ &error x1 & error x2 & error fvalue \\ \hline
-newton & none & 5000 & 5001 & 10000 & nan & nan & nan \\
+newton & none & 5000 & 5001 & 10000 & inf & inf & inf \\
         newton & backtracking\_armijo & 9 & 18 & 26 & 1.0097419586829e-28 & 1.0097419586829e-28 & 2.03915764624954e-56 \\
         newton & wolfe\_strong & 79 & 364 & 3 & 4.39949904840856e-17 & 4.42154583004284e-18 & 1.95510925522195e-33 \\
         newton & bisection\_wolfe\_weak & 9 & 26 & 35 & 1.0097419586829e-28 & 2.01948391736579e-28 & 5.09789411562385e-56 \\
@@ -911,16 +993,16 @@ newton & none & 5000 & 5001 & 10000 & nan & nan & nan \\
         steepest & none & 9 & 35 & 26 & inf & inf & inf \\
         steepest & backtracking\_armijo & 25 & 78 & 49 & 6.85627032245252e-18 & 3.91826085607981e-17 & 1.58228525636327e-33 \\
         steepest & wolfe\_strong & 8 & 40 & 3 & 3.95520219608251e-18 & 2.87545235394022e-19 & 1.57263066742937e-35 \\
-        steepest & bisection\_wolfe\_weak & 5000 & 15009 & 15008 & nan & nan & nan \\
-        steepest & bisection\_goldstein & 5000 & 20019 & 10000 & nan & nan & nan \\
+        steepest & bisection\_wolfe\_weak & 169 & 516 & 515 & 1.553548587951155e-23 & 0 & 2.413513215125028e-46 \\
+        steepest & bisection\_goldstein & 5 & 39 & 10 & 0 & 0 & 0 \\
         steepest & hanger\_zhang\_backtracking\_armijo & 5000 & 10008 & 10000 & 5.15377650230993e-147 & 0.0724316975798939 & 0.00524635081430521 \\
         steepest & hanger\_zhang\_bisection\_wolfe\_weak & 5000 & 15010 & 15009 & 0.211905875131239 & 1.80829961496735e-10 & 0.0449040999151361 \\
         steepest & hanger\_zhang\_wolfe\_strong & 8 & 40 & 3 & 3.95520219608251e-18 & 2.87545235394022e-19 & 1.57263066742937e-35 \\
         steepest & hanger\_zhang\_bisection\_goldstein & 5000 & 20013 & 10000 & 3.32946308142177e-08 & 0.00434180915679895 & 1.88513067551708e-05 \\
         steepest & grippo\_backtracking\_armijo & 261 & 550 & 521 & 9.55211620389891e-19 & 3.24481979382993e-17 & 1.05379797868278e-33 \\
-        steepest & grippo\_bisection\_wolfe\_weak & 5000 & 15012 & 15011 & nan & nan & nan \\
+        steepest & grippo\_bisection\_wolfe\_weak & 169 & 516 & 515 & 1.553548587951155e-23 & 0 & 2.413513215125028e-46 \\
         steepest & grippo\_wolfe\_strong & 8 & 40 & 3 & 3.95520219608251e-18 & 2.87545235394022e-19 & 1.57263066742937e-35 \\
-        steepest & grippo\_bisection\_goldstein & 5000 & 20019 & 10000 & nan & nan & nan \\
+        steepest & grippo\_bisection\_goldstein & 5 & 39 & 10 & 0 & 0 & 0 \\
 \end{tabular}}
 \caption{f5}
 \label{table:f5}
@@ -961,6 +1043,14 @@ newton & none & 57 & 57 & 114 & 0.00486057385712604 & 0.00126211245324357 & 6.99
 \caption{f6}
 \label{table:f6}
 \end{table}
+
+\clearpage
+
+\textbf{Question}
+Why \verb|wolfe - strong| doesn't converge?
+
+\textbf{Answer}
+TODO
 
 \begin{table}[h!]
 \resizebox{1.2\textwidth}{!}{

@@ -167,5 +167,34 @@ config.max_iters = 100;
 config.max_iters_step_size = 50;
 config.memory_limit = 0;
 [f,startp,xmin,fmin,domains] = powell();
-[xmin, fmin] = newton(f, domains, startp,"grippo_backtracking_armijo",config);
+% [xmin, fmin] = newton(f, domains, startp,"hanger_zhang_backtracking_armijo",config);
 
+function [f,startp,xmin,fmin,domains] = f5_sym()
+    syms x1 x2
+    f = (x1^2)^(x2^2 + 1) + (x2^2)^(x1^2 + 1);
+    startp = [-1.5,1.25]';
+    xmin = [0,0]';
+    fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
+end
+
+function [f,startp,xmin,fmin,domains] = f6_sym()
+    syms x1 x2 x3
+    f = (x1^2 + x2^3 - x3^4)^2 + (2*x1*x2*x3)^2 + (2*x1*x2-3*x2*x3+x1*x3)^2;
+    startp = [10,10,10]';
+    xmin = [0.0048605831,0.0016994507, 0]';
+    fmin = 0;
+    domains = {[-inf,inf], [-inf,inf], [-inf,inf]};
+end
+
+config.a = 1;
+config.rho = 2;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 3;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 10;
+config.memory_limit = 0;
+[f,startp,xmin,fmin,domains] = f6_sym();
+[xmin, fmin] = steepest_descent(f, domains, startp,"wolfe_strong",config);

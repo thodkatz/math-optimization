@@ -68,6 +68,7 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = steepest_descen
         end
 
         [pk, num_grad_fun_evals] = f_grad(x, num_grad_fun_evals);
+        % ensure that x is within the domain of the gradient of the function
         pk = -pk;
 
         % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
