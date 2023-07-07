@@ -5,8 +5,13 @@ function table = simulation(functions_info, line_search_methods)
     % todo use nargin, to configure the inputs of the functions better
     search_x = -1.8:0.1:1.2;
     search_y = -1.8:0.1:1.2;
-    memory_limit = 50; % for grippo
-    max_iters = 500;
+    config.a=1;
+    config.eps = 1e-16;
+    config.memory_limit = 10; % for grippo
+    config.max_iters = 5e3;
+    config.max_iters_step_size = 50;
+    config.max_iters_zoom = 10; % for wolfe strong
+
     for i=1:numel(functions_info)
         fun_info = functions_info{i};
         [fsym, starting_point, expected_x, expected_f,domains] = fun_info()
@@ -14,18 +19,15 @@ function table = simulation(functions_info, line_search_methods)
             line_search_method = line_search_methods{j}
 
             if endsWith(line_search_method, 'wolfe_strong')
-                c = [1e-4 0.9];
-                rho = 2;
+                config.c1 = 1e-4;
+                config.c2 = 0.9;
+                config.rho = 2;
             else
-                c = 0.1;
-                rho = 0.5;
+                config.c = 0.1;
+                config.rho = 0.6;
             end
 
-            if startsWith(line_search_method, "grippo")
-                [xmin, fmin, iter, ni, nj] = newton(fsym, domains, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=max_iters, to_plot=to_plot, memory_limit);
-            else
-                [xmin, fmin, iter, ni, nj] = newton(fsym, domains, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=max_iters, to_plot=to_plot);
-            end
+            [xmin, fmin, iter, ni, nj] = newton(fsym, domains, starting_point, line_search_method, config);
 
             table(end+1,:) = {['f',num2str(i)], "newton", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
         end
@@ -33,19 +35,16 @@ function table = simulation(functions_info, line_search_methods)
             line_search_method = line_search_methods{j}
 
             if endsWith(line_search_method, 'wolfe_strong')
-                c = [1e-4 0.9];
-                rho = 2;
+                config.c1 = 1e-4;
+                config.c2 = 0.9;
+                config.rho = 2;
             else
-                c = 0.1;
-                rho = 0.5;
+                config.c = 0.1;
+                config.rho = 0.6;
             end
 
             try
-                if startsWith(line_search_method, "grippo")
-                    [xmin, fmin, iter, ni, nj] = steepest_descent(fsym, domains, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=max_iters, to_plot=to_plot, memory_limit);
-                else
-                    [xmin, fmin, iter, ni, nj] = steepest_descent(fsym, domains, starting_point, line_search_method, search_x, search_y, c, rho, a=1, eps=1e-6, max_iters=max_iters, to_plot=to_plot);
-                end
+                [xmin, fmin, iter, ni, nj] = steepest_descent(fsym, domains, starting_point, line_search_method, config);
 
                 table(end+1,:) = {['f',num2str(i)], "steepest", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
             catch err

@@ -60,7 +60,7 @@ end
 
 function [f,startp,xmin,fmin,domains] = powell()
     syms x1 x2 x3 x4 real
-    f = (x1+10*x2) + 5*(x3-x4)^2 + (x2-2*x3)^4 + 10*(x1-x4)^2;
+    f = (x1+10*x2)^2 + 5*(x3-x4)^2 + (x2-2*x3)^4 + 10*(x1-x4)^4;
     startp = [3,-1,0,1]';
     xmin = [0,0,0,0]';
     fmin = 0;
@@ -143,11 +143,6 @@ functions_info = {@rosen2,
             @trig20};
 
 
-to_plot=false;
-% redundant search_x and search_y because we don't plot
-% todo use nargin, to configure the inputs of the functions better
-search_x = -1.8:0.1:1.2;
-search_y = -1.8:0.1:1.2;
 
 line_search_methods = { 'backtracking_armijo', 
                         'wolfe_strong', 
@@ -161,6 +156,7 @@ line_search_methods = { 'backtracking_armijo',
                         'grippo_bisection_wolfe_weak',
                         'grippo_wolfe_strong',
                         'grippo_bisection_goldstein'};
+
 
 
 table = simulation(functions_info, line_search_methods);

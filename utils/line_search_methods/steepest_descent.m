@@ -1,4 +1,4 @@
-function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_function_evaluations] = steepest_descent(f_sym, domains, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=1000, to_plot=true, varargin)
+function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = steepest_descent(f_sym, domains, x, line_search_method, options, varargin)
     % STEEPEST DESCENT Find the minimum of a function using the Newton method
     %
     % USAGE:
@@ -39,27 +39,39 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
     f_grad = function_handle(f_grad);
     f_grad = @(v, n=0) vector_function(f_grad, v, n);
 
-    number_of_function_evaluations = 0; 
-    number_of_gradient_function_evaluations = 0;
+    num_fun_evals = 0; 
+    num_grad_fun_evals = 0;
 
-    if startsWith(line_search_method, "grippo")
-        assert(numel(varargin) == 1)
-        memory_limit = varargin{1};
+    if numel(varargin) == 4
+        to_plot = true;
+        assert(varargin{1},"search_x")
+        search_domain_x = varargin{2};
+        assert(varargin{3},"search_y")
+        search_domain_y = varargin{4};
+    elseif numel(varargin) ~= 0
+        error("Unexpected number of variable arg inputs")
+    elseif numel(varargin) == 0
+        to_plot = false;
     end
 
     fprintf("STARTED Line search using steepest descent\n")
+    eps = options.eps;
+    max_iters = options.max_iters;
+    a = options.a;
     xall = {x};
     steps_all = [a];
+    [fval, num_fun_evals] = f(x, num_fun_evals);
+    fall = [fval];
     for iter = 1:max_iters
         if any(isinf(x))
             error("Failed to converge. Inf value reached")
         end
 
-        [pk, number_of_gradient_function_evaluations] = f_grad(x, number_of_gradient_function_evaluations);
+        [pk, num_grad_fun_evals] = f_grad(x, num_grad_fun_evals);
         pk = -pk;
 
         % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
-        a = check_boundaries(x, a, pk, domains);
+        options.a = check_boundaries(x, a, pk, domains);
         
         # check for convergence
         if norm(pk) < eps
@@ -68,10 +80,9 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
 
         if startsWith(line_search_method, "hanger_zhang")
             if iter == 1
-                ck = f(x);
+                ck = fval;
                 qk = 1;
             else
-                [fval, number_of_function_evaluations] = f(x, number_of_function_evaluations);
                 [ck, qk] = hanger_zhang_attrs(fval, ck, qk); # full nonmonotone
             end
         elseif startsWith(line_search_method, "grippo");
@@ -80,16 +91,18 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
             % FOR NEWTON’S METHOD
             % L. GRIPPOf, F. LAMPARIELLOf AND S. LUCIDI"
             if iter == 1
-                [ck, number_of_function_evaluations] = f(x, number_of_function_evaluations);
-            elseif iter < memory_limit
-                [fval, number_of_function_evaluations] = f(x, number_of_function_evaluations);
-                ck = max(ck,f(x));
+                ck = fval;
+            else
+                % max of previous iterations
+                ck = max(fall(max(1,end-options.memory_limit):end));
             end
         else
-            [ck, number_of_function_evaluations] = f(x, number_of_function_evaluations); # monotone
+            ck = fval; # monotone
         end
-        [step, number_of_function_evaluations, number_of_gradient_function_evaluations] = step_size(f, f_grad, line_search_method, x, pk, a, rho, c, ck, number_of_function_evaluations, number_of_gradient_function_evaluations);
+        [step, num_fun_evals, num_grad_fun_evals] = step_size(f, f_grad, x, pk, line_search_method, options, ck, num_fun_evals, num_grad_fun_evals);
         x += step*pk;
+        [fval, num_fun_evals] = f(x, num_fun_evals);
+        fall(end+1) = fval;
         steps_all(end+1) = step;
         xall{end+1} = x;
         fprintf("Iter %d, x=[%0.4e,%0.4e], a=%0.4e, grad norm=%0.4e \n", iter, x(1), x(2), step, norm(pk))
@@ -98,11 +111,12 @@ function [xmin, fmin, iter, number_of_function_evaluations, number_of_gradient_f
     xmin = x
     fmin = f(xmin)
     iter
-    number_of_function_evaluations
-    number_of_gradient_function_evaluations
+    num_fun_evals
+    num_grad_fun_evals
 
     if to_plot
-        plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
+    % todo: why not to pass fall?
+        plot_line_search1(f, fall, xall, steps_all, search_domain_x, search_domain_y)
     end
 end
 

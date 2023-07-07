@@ -5,94 +5,162 @@ directory = pwd
 addpath(genpath(directory))
 
 % define rosenbrock function
-function f = rosen_sym()
-    syms x y
-    f = 100*(y-x^2)^2 + (1-x)^2;
+function [f,startp,xmin,fmin,domains] = f1_sym()
+    syms x1 x2
+    f = 100*(x2-x1^2)^2 + (1-x1)^2;
+    startp = [-1.8,-1.8]';
+    xmin = [1,1]';
+    fmin = 0;
+    domains = {[-inf,inf], [-inf,inf]};
+end
+
+function [f,startp,xmin,fmin,domains] = rosen_extended_sym(n)
+    x1 = sym('x1');
+    x2 = sym('x2');
+    f = 100*(x2-x1^2)^2 + (1-x1)^2;
+
+    startp = [-1.2,1];
+    xmin = [1,1];
+    domains = {[-inf,inf], [-inf,inf]};
+
+    for i = 3:n
+        sym_ith = sym(['x',num2str(i)]);
+        if i == 3
+            sym_ith_prev = x2;
+        else
+            sym_ith_prev = sym(['x',num2str(i-1)]);
+        end
+        f += (1 - sym_ith_prev)^2 + 100*(sym_ith - sym_ith_prev^2)^2;
+
+        if mod(i,2) == 0
+            startp(end+1) = 1;
+        else
+            startp(end+1) = -1.2;
+        end
+        xmin(end+1) = 1;
+        domains{end+1} = [-inf,inf];
+    end
+    startp = startp';
+    xmin = xmin';
+    fmin = 0;
+end
+
+function [f,startp,xmin,fmin,domains] = rosen2()
+    [f,startp,xmin,fmin,domains] = rosen_extended_sym(2);
 end
 
 
-%search_x = -1.2:0.1:1.2;
-%search_y = -1.2:0.1:1.2;
-%[xmin, fmin] = newton(rosen_sym, [-1.8,-1.8]', "nonmonotone_armijo", search_x, search_y);
+config.a = 1;
+config.rho = 0.5;
+config.c = 0.1;
+config.eps = 1e-16;
+config.max_iters = 200;
+config.max_iters_step_size = 100;
+search_x = -1.2:0.1:1.2;
+search_y = -1.2:0.1:1.2;
+[f1,startp,xmin,fmin,domains] = f1_sym();
 
-%function f = f2_sym()
-    %syms x y
-    %f = (x+2*y-7)^2 + (2*x + y - 5)^2;
-%end
+% fmin 0: (a=1,rho=0.5,c=0.1,eps=1e-16,max_iters=200,max_iters_step_size=100)
+% [xmin, fmin] = newton(f1, domains, [-1.8,-1.8]',"backtracking_armijo",config);
 
-% search_x = 0:0.2:3;
-% search_y = 0:0.2:3;
-% [xmin, fmin] = steepest_descent(f2_sym, [3,3]', "none", search_x, search_y);
+% fmin 1e-6: (a=1,rho=0.5,c=0.1,eps=1e-16,max_iters=5000,max_iters_step_size=50), the last one doesn't matter, usually the backtracking finds a solution within 8 iters
+% fmin 5.41e-8: (a=1,rho=0.6,c=0.1,eps=1e-16, max_iters=5000,max_iters_step_size=50)
+% fmin 4.42e-12: (a=1,rho=0.6,c=0.1,eps=1e-16, max_iters=1e4,max_iters_step_size=50)
+% fmin 2.25e-10: (a=1,rho=0.7,c=0.1,eps=1e-16,max_iters=1e4,max_iters_step_size=50)
+% increasing the numbers of iterations it is converging
+config.a = 1;
+config.rho = 0.6;
+config.c = 0.1;
+config.eps=1e-16;
+config.max_iters = 1000;
+config.max_iters_step_size = 50;
+% [xmin, fmin] = steepest_descent(f1, domains, [-1.8,-1.8]',"backtracking_armijo",config);
 
-% search_x = -1.2:0.1:1.2;
-% search_y = -1.2:0.1:1.2;
-% c = [1e-4 0.9];
-% rho = 2;
-% [xmin, fmin] = steepest_descent(rosen_sym, [1.2,1.2]', "wolfe_strong", search_x, search_y, c, rho);
+% fmin 3e-31 (a=1,rho=2,c1=1e-4,c2=0.9,eps=1e-16,max_iters=1000,max_iters_step_size=50,max_iters_zoom=10)
+config.a = 1;
+config.rho = 2;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 1000;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 10;
+% [xmin, fmin] = newton(f1, domains, [-1.8,-1.8]',"wolfe_strong",config);
 
-%function f = f4_sym()
-    %syms x y
-    %f = (x^2)^(y^2 + 1) + (y^2)^(x^2 + 1);
-%end
+% fmin 6.86e-03 (a=1,rho=2,c1=1e-4,c2=0.9,eps=1e-16,max_iters=1000,max_iters_step_size=50,max_iters_zoom=10)
+% fmin 9.73e-04 (a=1,rho=2,c1=1e-4,c2=0.9,eps=1e-16,max_iters=1e4,max_iters_step_size=50,max_iters_zoom=10)
+config.a = 1;
+config.rho = 2;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 1e4;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 10;
+% [xmin, fmin] = steepest_descent(f1, domains, [-1.8,-1.8]',"wolfe_strong",config);
 
-% search_x = -1.5:0.5:1.5;
-% search_y = -1.5:0.5:1.5;
-% [xmin, fmin] = newton(f4_sym, [-1.5,1.25]', "backtracking_wolfe_weak", search_x, search_y);
+% fmin 0 (a=1,rho=2,c1=1e-4,c2=0.9,rho=2,eps=1e-16,max_iters=1e4,max_iters_step_size=50,max_iters_zoom=10,memory_limit=50)
+config.a = 1;
+config.rho = 2;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 1e4;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 10;
+config.memory_limit = 50;
+% [xmin, fmin] = newton(f1, domains, [-1.8,-1.8]',"grippo_wolfe_strong");
 
-% search_x = -1.5:0.5:1.5;
-% search_y = -1.5:0.5:1.5;
-% [xmin, fmin] = steepest_descent(f4_sym, [-1.5,1.25]', "backtracking_wolfe_weak", search_x, search_y);
+config.a = 1;
+config.rho = 5;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 200;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 50;
+config.memory_limit = 50;
+% [xmin, fmin] = steepest_descent(f1, domains, [-1.8,-1.8]',"grippo_wolfe_strong",config);
+
+% fmin 0 (a=1,rho=0.6,c=0.1,eps=1e-16,max_iters=1e4,max_iters_step_size=50,memory_limit=50)
+config.a = 1;
+config.rho = 0.6;
+config.c = 0.1;
+config.eps=1e-16;
+config.max_iters = 1e4;
+config.max_iters_step_size = 50;
+config.memory_limit = 50;
+% [xmin, fmin] = newton(f1, domains, [-1.8,-1.8]',"grippo_backtracking_armijo",config);
+
+% fmin  4.76 (a=1,rho=0.6,c=0.1,eps=1e-16,max_iters=1e4,max_iters_step_size=50,memory_limit=50)
+config.a = 1;
+config.rho = 0.6;
+config.c = 0.1;
+config.eps=1e-16;
+config.max_iters = 1000;
+config.max_iters_step_size = 50;
+config.memory_limit = 10;
+[xmin, fmin] = steepest_descent(f1, domains, [-1.8,-1.8]',"grippo_backtracking_armijo",config,"search_x",search_x,"search_y",search_y);
+
+%
+config.a = 1;
+config.rho = 2;
+config.c1 = 1e-4;
+config.c2 = 0.9;
+config.eps=1e-16;
+config.max_iters = 100;
+config.max_iters_step_size = 50;
+config.max_iters_zoom = 10;
+config.memory_limit = 20;
+% [xmin, fmin] = steepest_descent(rosen2, domains, [-1.2,1]',"grippo_wolfe_strong",config,"search_x",search_x,"search_y",search_y);
+% [xmin, fmin] = steepest_descent(rosen2, domains, [-1.2,1]',"grippo_wolfe_strong",config,"search_x",search_x,"search_y",search_y);
 
 
-%function f = f5_sym()
-    %syms x y z
-    %f = (x^2 + y^3 - z^4)^2 + (2*x*y*z)^2 + (2*x*y-3*y*z+x*z)^2;
-%end
-
-%search_x = -1:1:1;
-%search_y = -1:1:1;
-%[xmin, fmin] = newton(f5_sym, [10,10,10]', "nonmonotone_backtracking_wolfe_weak", search_x, search_y);
-
-function f = f7_sym()
-    syms x1 x2 x3
-    f = x1^2 + (x2 + x2^2)^2 + (-1 + exp(x3))^2;
-end
-
-function [f,domains] = f8_sym()
-    syms x1 x2 x3 x4
-    f = (x1-1)^2 + (x1-sqrt(x2))^2 + (x2-sqrt(x3))^2 + (x3-sqrt(x4))^2;
-    domains = {[-inf,inf], [0,inf], [0,inf], [0,inf]}; # exclude zero take into account grad
-end
-
-% search_x = -1:1:1;
-% search_y = -1:1:1;
-% c = [1e-4 0.9];
-% rho = 2;
-% [xmin, fmin] = newton(f7_sym, [2,3,-8]', 'wolfe_strong', search_x, search_y, c, rho);
-
-function f = f1_sym()
-    syms x y
-    f = x^2 + 4*y^2 + 2*x*y;
-end
-
-% search_x = -3:0.2:0.4;
-% search_y = -3:0.2:0.4;
-% memory_limit = 100;
-
-% c = [1e-4 0.9];
-% rho = 2;
-% [xmin, fmin] = steepest_descent(rosen_sym, [-1.8,-1.8]', 'hanger_zhang_wolfe_strong', search_x, search_y, c=c, rho=rho, a=1, eps=1e-6, max_iters=1000, to_plot=false);
-
-
-% [xmin, fmin] = newton(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
-% [xmin, fmin, iter] = steepest_descent(f1_sym, [-3,-3]', 'grippo_bisection_wolfe_weak', search_x, search_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=100, to_plot=false,memory_limit);
-
-search_x = -1:1:1;
-search_y = -1:1:1;
-c = [1e-4, 0.9];
-rho = 2;
-a = 1;
-eps = 1e-6;
-max_iters=4;
-[f8,domains] = f8_sym
-[xmin, fmin] = newton(f8, domains, [0.1,0.1,0.1,0.1]', 'bisection_wolfe_weak', search_x, search_y, c=c, rho=rho,a=a,eps,max_iters=max_iters, to_plot=false);
+% fmin 6.43 (a=1,rho=0.6,c=0.1,eps=1e-16,max_iters=1e4,max_iters_step_size=50)
+config.a = 1;
+config.rho = 0.6;
+config.c = 0.1;
+config.eps=1e-16;
+config.max_iters = 1e4;
+config.max_iters_step_size = 50;
+% [xmin, fmin] = steepest_descent(f1, domains, [-1.8,-1.8]',"hanger_zhang_backtracking_armijo",config,"search_x",search_x,"search_y",search_y);

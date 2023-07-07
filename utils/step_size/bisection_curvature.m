@@ -1,4 +1,4 @@
-function [a, number_of_function_evaluations, number_of_gradient_function_evaluations] = bisection_curvature(curvature_condition, f, f_grad, x, pk, a, c=[1e-4, 0.9], ck, iter_count=100, number_of_function_evaluations, number_of_gradient_function_evaluations)
+function [a, num_fun_evals, num_grad_fun_evals] = bisection_curvature(curvature_condition, f, f_grad, x, pk, options, ck, num_fun_evals, num_grad_fun_evals)
     % Implementation of bisection curvature condition (wolfe and goldstein)
     %
     % Note:
@@ -8,16 +8,20 @@ function [a, number_of_function_evaluations, number_of_gradient_function_evaluat
     % Convergence of descent methods with backtracking 
     % (Armijo) linesearch. Bisection algorithm for weak Wolfe
     % conditions, Anton Evgrafov
+
+    a = options.a;
+    iter_count = options.max_iters_step_size;
+
     is_goldstein = strcmp(curvature_condition,"goldstein");
     is_wolfe = strcmp(curvature_condition,"weak wolfe");
 
     if is_goldstein
-        c1 = c;
-        c2 = 1-c;
+        c1 = options.c;
+        c2 = 1-c1;
         assert (c1>0 && c1<0.5)
     elseif is_wolfe
-        c1 = c(1);
-        c2 = c(2);
+        c1 = options.c1;
+        c2 = options.c2;
     else
         error(-1)
     end
@@ -31,19 +35,19 @@ function [a, number_of_function_evaluations, number_of_gradient_function_evaluat
 
     iter = 0;
     fprintf("\nSTARTED WOLFE Step size config...\n")
-    [fgrad, number_of_gradient_function_evaluations] = f_grad(x, number_of_gradient_function_evaluations);
+    [fgrad, num_grad_fun_evals] = f_grad(x, num_grad_fun_evals);
     phi_derivative0 = dot(fgrad, pk);
-    [fval, number_of_function_evaluations]  = f(x, number_of_function_evaluations);
+    [fval, num_fun_evals]  = f(x, num_fun_evals);
     while 1
         if is_goldstein
-            [curv_cond, number_of_function_evaluations] = curvature_condition_goldstein(f, f_grad, fval, x, pk, a, c2, phi_derivative0, number_of_function_evaluations);
+            [curv_cond, num_fun_evals] = curvature_condition_goldstein(f, f_grad, fval, x, pk, a, c2, phi_derivative0, num_fun_evals);
         elseif is_wolfe
-            [curv_cond, number_of_gradient_function_evaluations] = curvature_condition_weak_wolfe(f_grad, x, pk, a, c2, phi_derivative0, number_of_gradient_function_evaluations);
+            [curv_cond, num_grad_fun_evals] = curvature_condition_weak_wolfe(f_grad, x, pk, a, c2, phi_derivative0, num_grad_fun_evals);
         else
             error(-1)
         end
 
-        [armijo_cond, number_of_function_evaluations] = armijo_condition(f, phi_derivative0, x, pk, a, c1, ck, number_of_function_evaluations);
+        [armijo_cond, num_fun_evals] = armijo_condition(f, phi_derivative0, x, pk, a, c1, ck, num_fun_evals);
         if armijo_cond
             amax = a;
             a = (amin + amax)/2;

@@ -1,16 +1,11 @@
-function plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
-    yall = [];
+function plot_line_search1(f, yall, xall, steps_all, search_domain_x, search_domain_y)
     iterations = 1:numel(xall);
-    for i = iterations
-        yall = [yall f(xall{i})];
-    end
-
     # we can't plot more than 2 dimensions
     more_2_dims = numel(xall{1}) > 2;
     if more_2_dims
-        rows = 1;
+        rows = 2;
     else
-        rows = 3;
+        rows = 6;
     end
     plot_num = 1;
     if not(more_2_dims)
@@ -36,10 +31,26 @@ function plot_line_search1(f, xall, steps_all, search_domain_x, search_domain_y)
             x1all = [x1all x1];
             x2all = [x2all x2];
         end
-        subplot(rows, 1, plot_num)
+        subplot(rows,1,plot_num)
         plot3(x1all,x2all,yall)
         plot_num += 1;
+
+        subplot(rows,1,plot_num)
+        plot(iterations,x1all)
+        ylabel("x1")
+        plot_num += 1;
+
+        subplot(rows,1,plot_num)
+        plot(iterations,x2all)
+        ylabel("x2")
+        plot_num += 1;
     end
+
+    subplot(rows, 1, plot_num)
+    plot(iterations,yall)
+    ylabel("f")
+    plot_num += 1;
+
     subplot(rows, 1, plot_num)
     plot(iterations, steps_all, '-o')
     xlabel("Iterations")

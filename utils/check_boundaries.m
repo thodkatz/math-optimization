@@ -49,5 +49,6 @@ function a = check_boundaries(x, a, pk, domains)
     else
         a = (ub - lb)/2;
     end
+    fprintf("Checking boundaries... Alpa should be trimmed, new value %0.4e\n",a)
 
 end
