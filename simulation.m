@@ -27,7 +27,7 @@ function table = simulation(functions_info, line_search_methods)
                 config.rho = 0.6;
             end
 
-            [xmin, fmin, iter, ni, nj] = newton(fsym, domains, starting_point, line_search_method, config);
+            [xmin, fmin, iter, ni, nj] = minimize(fsym, domains, starting_point, "newton", line_search_method, config);
 
             table(end+1,:) = {['f',num2str(i)], "newton", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
         end
@@ -44,7 +44,7 @@ function table = simulation(functions_info, line_search_methods)
             end
 
             try
-                [xmin, fmin, iter, ni, nj] = steepest_descent(fsym, domains, starting_point, line_search_method, config);
+                [xmin, fmin, iter, ni, nj] = minimize(fsym, domains, starting_point, "steepest", line_search_method, config);
 
                 table(end+1,:) = {['f',num2str(i)], "steepest", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
             catch err

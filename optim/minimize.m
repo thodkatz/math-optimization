@@ -1,4 +1,4 @@
-function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = newton(f_sym, domains, x, line_search_method, options, varargin)
+function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym, domains, x, method, line_search_method, options, varargin)
 %function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = newton(f_sym, domains, x, line_search_method, search_domain_x, search_domain_y, c=0.1, rho=0.5, a=1, eps=1e-6, max_iters=1000, to_plot=true, varargin)
     % NEWTON Find the minimum of a function using the Newton method
     %
@@ -38,20 +38,35 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = newton(f_sym, d
     %       [xmin, fmin] = newton(f_sym, [-1, -1], "backtracking_armijo", 'rho', 0.8, 'c', 0.2)
     %       % Output: xmin = [-0.4992, -0.4992], fmin = 0.7508
     %
+    NEWTON = 0;
+    STEEPEST = 1;
+    LBFGS = 2;
+
+    if strcmp(method, "newton")
+        method = NEWTON;
+    elseif strcmp(method, "steepest")
+        method = STEEPEST;
+    elseif strcmp(method, "lbfgs")
+        method = LBFGS;
+    else
+        error(-1)
+    end
+
 
     f = function_handle(f_sym);
     f = @(v,n=0) vector_function(f,v, n);
 
     sym_vars = symvar(f_sym);
 
-
     f_grad = gradient(f_sym, sym_vars);
     f_grad = function_handle(f_grad);
     f_grad = @(v,n=0) vector_function(f_grad, v, n);
 
-    f_hessian = hessian(f_sym, sym_vars);
-    f_hessian = function_handle(f_hessian);
-    f_hessian = @(v,n=0) vector_function(f_hessian, v, n);
+    if method == NEWTON
+        f_hessian = hessian(f_sym, sym_vars);
+        f_hessian = function_handle(f_hessian);
+        f_hessian = @(v,n=0) vector_function(f_hessian, v, n);
+    end
 
     num_fun_evals = 0; 
     num_grad_fun_evals = 0;
@@ -82,8 +97,14 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = newton(f_sym, d
         end
 
         [grad_x, num_grad_fun_evals] = f_grad(x, num_grad_fun_evals);
-        [hess_x, num_grad_fun_evals] = f_hessian(x, num_grad_fun_evals);
-        pk = -linsolve(hess_x, grad_x);
+        if method == NEWTON
+            [hess_x, num_grad_fun_evals] = f_hessian(x, num_grad_fun_evals);
+            pk = -linsolve(hess_x, grad_x);
+        elseif method == STEEPEST
+            pk = -grad_x;
+        else
+            error(-1)
+        end
 
         % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
         options.a = check_boundaries(x, a, pk, domains);
