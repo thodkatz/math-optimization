@@ -90,13 +90,6 @@ functions_info = {@f1_sym,
             @f7_sym, 
             @f8_sym};
 
-functions_info = {@f1_sym, 
-            @f2_sym, 
-            @f3_sym, 
-            @f4_sym, 
-            @f5_sym, 
-            @f6_sym, 
-            @f7_sym};
 
 
 starting_points = {[-1.8, -1.8]',

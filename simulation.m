@@ -11,47 +11,36 @@ function table = simulation(functions_info, line_search_methods)
     config.max_iters = 5e3;
     config.max_iters_step_size = 50;
     config.max_iters_zoom = 10; % for wolfe strong
+    config.m = 100; % for lbfgs memory
+
+    methods = {"lbfgs"}; % make it input argument
 
     for i=1:numel(functions_info)
         fun_info = functions_info{i};
         [fsym, starting_point, expected_x, expected_f,domains] = fun_info()
-        for j=1:numel(line_search_methods)
-            line_search_method = line_search_methods{j}
+        for method_index=1:numel(methods)
+            for j=1:numel(line_search_methods)
+                line_search_method = line_search_methods{j}
+                method_str = methods{method_index}
 
-            if endsWith(line_search_method, 'wolfe_strong')
-                config.c1 = 1e-4;
-                config.c2 = 0.9;
-                config.rho = 2;
-            else
-                config.c = 0.1;
-                config.rho = 0.6;
+                if endsWith(line_search_method, 'wolfe_strong')
+                    config.c1 = 1e-4;
+                    config.c2 = 0.9;
+                    config.rho = 2;
+                else
+                    config.c = 0.1;
+                    config.rho = 0.6;
+                end
+
+                try
+                    [xmin, fmin, iter, ni, nj] = minimize(fsym, domains, starting_point, method_str, line_search_method, config);
+                    table(end+1,:) = {['f',num2str(i)], method_str, line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
+                catch err
+                    err.message
+                    fprintf("Failed to converge\n")
+                    table(end+1,:) = {['f',num2str(i)], method_str, line_search_method, -1, -1, -1, Inf, Inf, Inf};
+                end_try_catch
             end
-
-            [xmin, fmin, iter, ni, nj] = minimize(fsym, domains, starting_point, "newton", line_search_method, config);
-
-            table(end+1,:) = {['f',num2str(i)], "newton", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
-        end
-        for j=1:numel(line_search_methods)
-            line_search_method = line_search_methods{j}
-
-            if endsWith(line_search_method, 'wolfe_strong')
-                config.c1 = 1e-4;
-                config.c2 = 0.9;
-                config.rho = 2;
-            else
-                config.c = 0.1;
-                config.rho = 0.6;
-            end
-
-            try
-                [xmin, fmin, iter, ni, nj] = minimize(fsym, domains, starting_point, "steepest", line_search_method, config);
-
-                table(end+1,:) = {['f',num2str(i)], "steepest", line_search_method, iter, ni, nj, get_error(expected_x(1),xmin(1)), get_error(expected_x(2),xmin(2)), get_error(expected_f,fmin)};
-            catch err
-                err.message
-                fprintf("Failed to converge\n")
-                table(end+1,:) = {['f',num2str(i)], "steepest", line_search_method, iter, ni, nj, Inf, Inf, Inf};
-            end_try_catch
         end
     end
 

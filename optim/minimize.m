@@ -49,7 +49,7 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym,
     elseif strcmp(method, "lbfgs")
         method = LBFGS;
     else
-        error(-1)
+        error("Unsupported optimization method. Expected newton, steepest, lbfgs")
     end
 
 
@@ -83,15 +83,12 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym,
         to_plot = false;
     end
 
-    fprintf("STARTED Line search using newton\n")
-    eps = options.eps;
-    max_iters = options.max_iters;
-    a = options.a;
+    fprintf("STARTED Line search\n")
     xall = {x};
-    steps_all = [a];
+    steps_all = [options.a];
     [fval, num_fun_evals] = f(x, num_fun_evals);
     fall = [fval];
-    for iter = 1:max_iters
+    for iter = 1:options.max_iters
         if any(isinf(x))
             error("Failed to converge. Inf value reached")
         end
@@ -102,16 +99,30 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym,
             pk = -linsolve(hess_x, grad_x);
         elseif method == STEEPEST
             pk = -grad_x;
+        elseif method == LBFGS
+            if iter == 1
+                pk = -grad_x; % Initially use steepest descent direction
+                S = zeros(numel(x),options.m);
+                Y = zeros(numel(x),options.m);
+                YS = zeros(options.m,1);
+                lbfgs_start = 1;
+                lbfgs_end = 0;
+                Hdiag = 1;
+            else
+                [S,Y,YS,lbfgs_start,lbfgs_end,Hdiag,skipped] = lbfgs_add(grad_x-grad_x_old,options.a*pk,S,Y,YS,lbfgs_start,lbfgs_end,Hdiag);
+                pk = lbfgs_prod(grad_x,S,Y,YS,lbfgs_start,lbfgs_end,Hdiag);
+            end
+            grad_x_old = grad_x;
         else
             error(-1)
         end
 
         % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
-        options.a = check_boundaries(x, a, pk, domains);
+        options.a = check_boundaries(x, options.a, pk, domains);
         
 
         % check for convergence
-        if norm(grad_x) < eps
+        if norm(grad_x) < options.eps
             break
         end
 
@@ -137,6 +148,10 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym,
             ck = fval; # monotone
         end
         [step, num_fun_evals, num_grad_fun_evals] = step_size(f, f_grad, x, pk, line_search_method, options, ck, num_fun_evals, num_grad_fun_evals);
+
+        % ensure that the init alpha value will keep the x + alpha*pk, within the domain of the function and the derivative
+        step = check_boundaries(x, step, pk, domains);
+
         x += step*pk;
         [fval, num_fun_evals] = f(x, num_fun_evals);
         fall(end+1) = fval;
@@ -144,7 +159,7 @@ function [xmin, fmin, iter, num_fun_evals, num_grad_fun_evals] = minimize(f_sym,
         xall{end+1} = x;
         fprintf("Iter %d, x=[%0.4e,%0.4e], a=%0.4e, grad norm=%0.4e \n", iter, x(1), x(2), step, norm(pk))
     end
-    fprintf("ENDED Line search using newton\n")
+    fprintf("ENDED Line search\n")
     xmin = x
     fmin = f(xmin)
     iter

@@ -1,4 +1,5 @@
 function a = check_boundaries(x, a, pk, domains)
+    old_a = a;
     check_domain = x + a*pk;
     % clip out of bounds dimensions
     alpha_conditions = {};
@@ -49,6 +50,6 @@ function a = check_boundaries(x, a, pk, domains)
     else
         a = (ub - lb)/2;
     end
-    fprintf("Checking boundaries... Alpa should be trimmed, new value %0.4e\n",a)
+    fprintf("Checking boundaries... Alpa (%0.4e) should be trimmed, new value %0.4e\n",old_a,a)
 
 end
